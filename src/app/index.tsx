@@ -137,39 +137,37 @@ export default function Index() {
     return (
       <SafeAreaView className="bg-background flex-1">
         <View className="flex-1">
-          <ScrollView className="flex-1" contentInsetAdjustmentBehavior="automatic">
-            <View className="gap-5 px-5 pt-5 pb-4">
-              <View className="gap-2">
-                {isChangingRoutine && (
-                  <Button
-                    className="-ml-3 self-start"
-                    size="sm"
-                    variant="ghost"
-                    onPress={() => {
-                      setSelectedRoutine(configuredRoutine);
-                      setIsChangingRoutine(false);
-                      setIsConfigured(true);
-                    }}>
-                    <Text>Cancel</Text>
-                  </Button>
-                )}
-                <Text variant="h3">How do you train?</Text>
-                <Text className="text-muted-foreground leading-6">
-                  Pick a starting split. You can change every workout type later.
-                </Text>
-              </View>
+          <View className="gap-2 px-5 pt-5 pb-3">
+            {isChangingRoutine && (
+              <Button
+                className="-ml-3 self-start"
+                size="sm"
+                variant="ghost"
+                onPress={() => {
+                  setSelectedRoutine(configuredRoutine);
+                  setIsChangingRoutine(false);
+                  setIsConfigured(true);
+                }}>
+                <Text>Cancel</Text>
+              </Button>
+            )}
+            <Text variant="h3">How do you train?</Text>
+            <Text className="text-muted-foreground leading-6">
+              Pick a starting split. You can change every workout type later.
+            </Text>
+          </View>
 
-              <View className="gap-2.5">
-                {ROUTINES.map((routine, index) => (
-                  <RoutineOption
-                    key={routine.name}
-                    index={index}
-                    isSelected={selectedRoutine === routine.name}
-                    routine={routine}
-                    onPress={() => selectRoutine(routine)}
-                  />
-                ))}
-              </View>
+          <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+            <View className="gap-2.5 px-5 pb-4">
+              {ROUTINES.map((routine, index) => (
+                <RoutineOption
+                  key={routine.name}
+                  index={index}
+                  isSelected={selectedRoutine === routine.name}
+                  routine={routine}
+                  onPress={() => selectRoutine(routine)}
+                />
+              ))}
             </View>
           </ScrollView>
 
