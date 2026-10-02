@@ -1,16 +1,10 @@
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Image, Pressable, ScrollView, View } from 'react-native';
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -281,53 +275,24 @@ export default function Index() {
               )}
             </View>
 
-            <Card>
-              <CardHeader>
-                <CardDescription>Today&apos;s best</CardDescription>
-                <CardTitle className="text-2xl">Bench press</CardTitle>
-              </CardHeader>
-              <CardContent className="flex-row items-end justify-between">
-                <View>
-                  <Text className="text-4xl font-bold">100 kg</Text>
-                  <Text variant="muted">5 reps</Text>
-                </View>
-                <Text className="text-primary font-semibold">New PR</Text>
-              </CardContent>
+            <Card className="items-center gap-5 px-6 py-10">
+              <View className="h-20 w-20 items-center justify-center rounded-3xl bg-black">
+                <Image
+                  className="h-10 w-10"
+                  resizeMode="contain"
+                  source={require('../../assets/images/expo-logo.png')}
+                />
+              </View>
+              <View className="items-center gap-1.5">
+                <Text variant="large">No PRs yet</Text>
+                <Text className="text-muted-foreground text-center leading-6">
+                  Log your first lift to start tracking your progress.
+                </Text>
+              </View>
+              <Button size="lg">
+                <Text>Log your first PR</Text>
+              </Button>
             </Card>
-
-            <View className="gap-3">
-              <Text variant="large">Recent PRs</Text>
-
-              <Card className="gap-0 py-0">
-                <CardContent className="flex-row items-center justify-between py-4">
-                  <View className="gap-1">
-                    <Text className="font-semibold">Incline dumbbell press</Text>
-                    <Text variant="muted">Chest · Yesterday</Text>
-                  </View>
-                  <View className="items-end">
-                    <Text className="font-semibold">32.5 kg</Text>
-                    <Text variant="muted">8 reps</Text>
-                  </View>
-                </CardContent>
-
-                <View className="bg-border mx-6 h-px" />
-
-                <CardContent className="flex-row items-center justify-between py-4">
-                  <View className="gap-1">
-                    <Text className="font-semibold">Back squat</Text>
-                    <Text variant="muted">Legs · 28 Sep</Text>
-                  </View>
-                  <View className="items-end">
-                    <Text className="font-semibold">140 kg</Text>
-                    <Text variant="muted">3 reps</Text>
-                  </View>
-                </CardContent>
-              </Card>
-            </View>
-
-            <Button size="lg">
-              <Text>Log a PR</Text>
-            </Button>
           </View>
         </ScrollView>
       </Animated.View>
