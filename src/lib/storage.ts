@@ -158,3 +158,22 @@ export async function insertPersonalRecord(
 
   return { ...record, createdAt, id: result.lastInsertRowId };
 }
+
+export async function updatePersonalRecord(record: PersonalRecord) {
+  const db = await database;
+  await db.runAsync(
+    `UPDATE personal_records
+      SET exercise = ?, weight_kg = ?, reps = ?, workout_type = ?
+      WHERE id = ?`,
+    record.exercise,
+    record.weight,
+    record.reps,
+    record.workoutType,
+    record.id
+  );
+}
+
+export async function deletePersonalRecord(id: number) {
+  const db = await database;
+  await db.runAsync('DELETE FROM personal_records WHERE id = ?', id);
+}

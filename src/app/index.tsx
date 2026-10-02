@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import {
+  deletePersonalRecord,
   deleteWorkoutType,
   initializeDatabase,
   insertPersonalRecord,
@@ -11,10 +12,11 @@ import {
   type PersonalRecord,
   saveSelectedWorkoutType,
   saveWorkoutSetup,
+  updatePersonalRecord,
 } from '@/lib/storage';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
-import { Image, Pressable, ScrollView, View } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, View } from 'react-native';
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -105,11 +107,13 @@ export default function Index() {
   const [newType, setNewType] = useState('');
   const [isLoggingPr, setIsLoggingPr] = useState(false);
   const [isSavingPr, setIsSavingPr] = useState(false);
+  const [editingPrId, setEditingPrId] = useState<number>();
   const [draftPr, setDraftPr] = useState({ exercise: '', reps: '', weight: '' });
+  const [draftWorkoutType, setDraftWorkoutType] = useState('');
   const [personalRecords, setPersonalRecords] = useState<PersonalRecord[]>([]);
   const [storageError, setStorageError] = useState<string>();
   const canSavePr = Boolean(
-    selectedType &&
+    draftWorkoutType &&
     draftPr.exercise.trim() &&
     Number(draftPr.weight) > 0 &&
     Number.isInteger(Number(draftPr.reps)) &&
@@ -193,6 +197,7 @@ export default function Index() {
       await deleteWorkoutType(name, nextSelectedType);
       setWorkoutTypes(remainingTypes);
       setSelectedType(nextSelectedType);
+      if (draftWorkoutType === name) setDraftWorkoutType(nextSelectedType);
       setStorageError(undefined);
     } catch {
       setStorageError('Could not delete that workout type.');
@@ -203,10 +208,36 @@ export default function Index() {
     try {
       await saveSelectedWorkoutType(workoutType);
       setSelectedType(workoutType);
+      if (isLoggingPr) setDraftWorkoutType(workoutType);
       setStorageError(undefined);
     } catch {
       setStorageError('Could not save your selected workout type.');
     }
+  };
+
+  const closePrForm = () => {
+    setDraftPr({ exercise: '', reps: '', weight: '' });
+    setDraftWorkoutType('');
+    setEditingPrId(undefined);
+    setIsLoggingPr(false);
+  };
+
+  const startNewPr = () => {
+    setDraftPr({ exercise: '', reps: '', weight: '' });
+    setDraftWorkoutType(selectedType);
+    setEditingPrId(undefined);
+    setIsLoggingPr(true);
+  };
+
+  const startEditingPr = (record: PersonalRecord) => {
+    setDraftPr({
+      exercise: record.exercise,
+      reps: String(record.reps),
+      weight: String(record.weight),
+    });
+    setDraftWorkoutType(record.workoutType);
+    setEditingPrId(record.id);
+    setIsLoggingPr(true);
   };
 
   const savePr = async () => {
@@ -215,21 +246,53 @@ export default function Index() {
 
     setIsSavingPr(true);
     try {
-      const record = await insertPersonalRecord({
+      const values = {
         exercise,
         reps: Number(draftPr.reps),
         weight: Number(draftPr.weight),
-        workoutType: selectedType,
-      });
-      setPersonalRecords((records) => [record, ...records]);
-      setDraftPr({ exercise: '', reps: '', weight: '' });
-      setIsLoggingPr(false);
+        workoutType: draftWorkoutType,
+      };
+
+      if (editingPrId) {
+        const currentRecord = personalRecords.find(({ id }) => id === editingPrId);
+        if (!currentRecord) return;
+
+        const updatedRecord = { ...currentRecord, ...values };
+        await updatePersonalRecord(updatedRecord);
+        setPersonalRecords((records) =>
+          records.map((record) => (record.id === editingPrId ? updatedRecord : record))
+        );
+      } else {
+        const record = await insertPersonalRecord(values);
+        setPersonalRecords((records) => [record, ...records]);
+      }
+
+      closePrForm();
       setStorageError(undefined);
     } catch {
       setStorageError('Could not save that PR.');
     } finally {
       setIsSavingPr(false);
     }
+  };
+
+  const removePr = (record: PersonalRecord) => {
+    Alert.alert('Delete PR?', `${record.exercise} will be permanently removed.`, [
+      { style: 'cancel', text: 'Cancel' },
+      {
+        style: 'destructive',
+        text: 'Delete',
+        onPress: async () => {
+          try {
+            await deletePersonalRecord(record.id);
+            setPersonalRecords((records) => records.filter(({ id }) => id !== record.id));
+            setStorageError(undefined);
+          } catch {
+            setStorageError('Could not delete that PR.');
+          }
+        },
+      },
+    ]);
   };
 
   if (isLoading) {
@@ -311,6 +374,7 @@ export default function Index() {
                 size="sm"
                 variant="ghost"
                 onPress={() => {
+                  closePrForm();
                   setIsChangingRoutine(true);
                   setIsConfigured(false);
                 }}>
@@ -323,7 +387,7 @@ export default function Index() {
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   <View className="flex-row gap-2 pr-8">
                     {workoutTypes.map((type) => {
-                      const isSelected = selectedType === type;
+                      const isSelected = (isLoggingPr ? draftWorkoutType : selectedType) === type;
 
                       return (
                         <View
@@ -397,12 +461,12 @@ export default function Index() {
                 <Card className="gap-4 p-5">
                   <View className="flex-row items-center justify-between">
                     <View className="gap-1">
-                      <Text variant="large">Log a PR</Text>
+                      <Text variant="large">{editingPrId ? 'Edit PR' : 'Log a PR'}</Text>
                       <Text variant="muted">
-                        {selectedType || 'Add a workout type above first'}
+                        {draftWorkoutType || 'Add a workout type above first'}
                       </Text>
                     </View>
-                    <Button size="sm" variant="ghost" onPress={() => setIsLoggingPr(false)}>
+                    <Button size="sm" variant="ghost" onPress={closePrForm}>
                       <Text>Cancel</Text>
                     </Button>
                   </View>
@@ -442,7 +506,9 @@ export default function Index() {
                     disabled={!canSavePr || isSavingPr}
                     size="lg"
                     onPress={savePr}>
-                    <Text>{isSavingPr ? 'Saving…' : 'Save PR'}</Text>
+                    <Text>
+                      {isSavingPr ? 'Saving…' : editingPrId ? 'Update PR' : 'Save PR'}
+                    </Text>
                   </Button>
                 </Card>
               </Animated.View>
@@ -461,7 +527,7 @@ export default function Index() {
                     Log your first lift to start tracking your progress.
                   </Text>
                 </View>
-                <Button size="lg" onPress={() => setIsLoggingPr(true)}>
+                <Button size="lg" onPress={startNewPr}>
                   <Text>Log your first PR</Text>
                 </Button>
               </Card>
@@ -480,9 +546,17 @@ export default function Index() {
                         <Text variant="muted">{record.reps} reps</Text>
                       </View>
                     </View>
+                    <View className="mt-3 flex-row justify-end gap-1">
+                      <Button size="sm" variant="ghost" onPress={() => startEditingPr(record)}>
+                        <Text>Edit</Text>
+                      </Button>
+                      <Button size="sm" variant="ghost" onPress={() => removePr(record)}>
+                        <Text className="text-destructive">Delete</Text>
+                      </Button>
+                    </View>
                   </Card>
                 ))}
-                <Button size="lg" onPress={() => setIsLoggingPr(true)}>
+                <Button size="lg" onPress={startNewPr}>
                   <Text>Log another PR</Text>
                 </Button>
               </View>
