@@ -4,12 +4,13 @@ A mobile-first personal-record tracker for gym workouts. Track the maximum weigh
 
 ## Current status
 
-The app currently contains a static dashboard prototype with workout filters, a daily best lift, and recent PRs. Persistence and workout logging are not implemented yet.
+The app includes routine onboarding, editable workout types, and PR logging. User setup and PR history persist locally with SQLite.
 
 ## Stack
 
 - Expo SDK 57 and React Native 0.86
 - Expo Router
+- Expo SQLite
 - React Native Reusables
 - NativeWind
 - Reanimated

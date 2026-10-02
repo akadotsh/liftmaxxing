@@ -2,6 +2,16 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
+import {
+  deleteWorkoutType,
+  initializeDatabase,
+  insertPersonalRecord,
+  insertWorkoutType,
+  loadAppData,
+  type PersonalRecord,
+  saveSelectedWorkoutType,
+  saveWorkoutSetup,
+} from '@/lib/storage';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import { Image, Pressable, ScrollView, View } from 'react-native';
@@ -31,12 +41,6 @@ const ROUTINES = [
 ] as const;
 
 type Routine = (typeof ROUTINES)[number];
-type PersonalRecord = {
-  exercise: string;
-  reps: string;
-  weight: string;
-  workoutType: string;
-};
 
 function RoutineOption({
   index,
@@ -90,6 +94,7 @@ function RoutineOption({
 }
 
 export default function Index() {
+  const [isLoading, setIsLoading] = useState(true);
   const [isConfigured, setIsConfigured] = useState(false);
   const [isChangingRoutine, setIsChangingRoutine] = useState(false);
   const [selectedRoutine, setSelectedRoutine] = useState<string>();
@@ -99,8 +104,10 @@ export default function Index() {
   const [isAddingType, setIsAddingType] = useState(false);
   const [newType, setNewType] = useState('');
   const [isLoggingPr, setIsLoggingPr] = useState(false);
+  const [isSavingPr, setIsSavingPr] = useState(false);
   const [draftPr, setDraftPr] = useState({ exercise: '', reps: '', weight: '' });
   const [personalRecords, setPersonalRecords] = useState<PersonalRecord[]>([]);
+  const [storageError, setStorageError] = useState<string>();
   const canSavePr = Boolean(
     selectedType &&
     draftPr.exercise.trim() &&
@@ -109,53 +116,131 @@ export default function Index() {
     Number(draftPr.reps) > 0
   );
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const load = async () => {
+      try {
+        await initializeDatabase();
+        const data = await loadAppData();
+        if (!isMounted) return;
+
+        setConfiguredRoutine(data.configuredRoutine);
+        setSelectedRoutine(data.configuredRoutine);
+        setWorkoutTypes(data.workoutTypes);
+        setSelectedType(data.selectedType);
+        setPersonalRecords(data.personalRecords);
+        setIsConfigured(Boolean(data.configuredRoutine));
+      } catch {
+        if (isMounted) setStorageError('Could not load your saved data.');
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    void load();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const selectRoutine = (routine: Routine) => {
     setSelectedRoutine(routine.name);
   };
 
-  const confirmRoutine = () => {
+  const confirmRoutine = async () => {
     const routine = ROUTINES.find(({ name }) => name === selectedRoutine);
     if (!routine) return;
 
     const types = [...routine.types];
-    setWorkoutTypes(types);
-    setSelectedType(types[0] ?? '');
-    setConfiguredRoutine(routine.name);
-    setIsChangingRoutine(false);
-    setIsConfigured(true);
+    const firstType = types[0] ?? '';
+
+    try {
+      await saveWorkoutSetup(routine.name, types, firstType);
+      setWorkoutTypes(types);
+      setSelectedType(firstType);
+      setConfiguredRoutine(routine.name);
+      setIsChangingRoutine(false);
+      setIsConfigured(true);
+      setStorageError(undefined);
+    } catch {
+      setStorageError('Could not save your workout routine.');
+    }
   };
 
-  const addWorkoutType = () => {
+  const addWorkoutType = async () => {
     const name = newType.trim();
 
     if (!name || workoutTypes.some((type) => type.toLowerCase() === name.toLowerCase())) return;
 
-    setWorkoutTypes([...workoutTypes, name]);
-    setSelectedType(name);
-    setNewType('');
-    setIsAddingType(false);
+    try {
+      await insertWorkoutType(name, workoutTypes.length);
+      setWorkoutTypes([...workoutTypes, name]);
+      setSelectedType(name);
+      setNewType('');
+      setIsAddingType(false);
+      setStorageError(undefined);
+    } catch {
+      setStorageError('Could not save that workout type.');
+    }
   };
 
-  const removeWorkoutType = (name: string) => {
+  const removeWorkoutType = async (name: string) => {
     const remainingTypes = workoutTypes.filter((type) => type !== name);
-    setWorkoutTypes(remainingTypes);
+    const nextSelectedType = selectedType === name ? (remainingTypes[0] ?? '') : selectedType;
 
-    if (selectedType === name) setSelectedType(remainingTypes[0] ?? '');
+    try {
+      await deleteWorkoutType(name, nextSelectedType);
+      setWorkoutTypes(remainingTypes);
+      setSelectedType(nextSelectedType);
+      setStorageError(undefined);
+    } catch {
+      setStorageError('Could not delete that workout type.');
+    }
   };
 
-  const savePr = () => {
+  const chooseWorkoutType = async (workoutType: string) => {
+    try {
+      await saveSelectedWorkoutType(workoutType);
+      setSelectedType(workoutType);
+      setStorageError(undefined);
+    } catch {
+      setStorageError('Could not save your selected workout type.');
+    }
+  };
+
+  const savePr = async () => {
     const exercise = draftPr.exercise.trim();
-    const reps = draftPr.reps.trim();
-    const weight = draftPr.weight.trim();
-    if (!canSavePr) return;
+    if (!canSavePr || isSavingPr) return;
 
-    setPersonalRecords((records) => [
-      { exercise, reps, weight, workoutType: selectedType },
-      ...records,
-    ]);
-    setDraftPr({ exercise: '', reps: '', weight: '' });
-    setIsLoggingPr(false);
+    setIsSavingPr(true);
+    try {
+      const record = await insertPersonalRecord({
+        exercise,
+        reps: Number(draftPr.reps),
+        weight: Number(draftPr.weight),
+        workoutType: selectedType,
+      });
+      setPersonalRecords((records) => [record, ...records]);
+      setDraftPr({ exercise: '', reps: '', weight: '' });
+      setIsLoggingPr(false);
+      setStorageError(undefined);
+    } catch {
+      setStorageError('Could not save that PR.');
+    } finally {
+      setIsSavingPr(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView className="bg-background flex-1">
+        <View className="flex-1 items-center justify-center">
+          <Text variant="h3">liftmaxxing</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (!isConfigured) {
     return (
@@ -179,6 +264,7 @@ export default function Index() {
             <Text className="text-muted-foreground leading-6">
               Pick a starting split. You can change every workout type later.
             </Text>
+            {storageError && <Text className="text-destructive text-sm">{storageError}</Text>}
           </View>
 
           <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
@@ -219,6 +305,7 @@ export default function Index() {
               <View className="flex-1 gap-1">
                 <Text variant="h3">liftmaxxing</Text>
                 <Text variant="muted">Track every personal record.</Text>
+                {storageError && <Text className="text-destructive text-sm">{storageError}</Text>}
               </View>
               <Button
                 size="sm"
@@ -249,7 +336,7 @@ export default function Index() {
                             accessibilityRole="button"
                             accessibilityState={{ selected: isSelected }}
                             className="py-2 pr-2 pl-3"
-                            onPress={() => setSelectedType(type)}>
+                            onPress={() => void chooseWorkoutType(type)}>
                             <Text
                               className={cn(
                                 'text-sm font-medium',
@@ -263,7 +350,7 @@ export default function Index() {
                             accessibilityRole="button"
                             className="py-2 pr-3"
                             hitSlop={8}
-                            onPress={() => removeWorkoutType(type)}>
+                            onPress={() => void removeWorkoutType(type)}>
                             <Text
                               className={cn(
                                 'text-muted-foreground text-base leading-4',
@@ -352,10 +439,10 @@ export default function Index() {
                   </View>
 
                   <Button
-                    disabled={!canSavePr}
+                    disabled={!canSavePr || isSavingPr}
                     size="lg"
                     onPress={savePr}>
-                    <Text>Save PR</Text>
+                    <Text>{isSavingPr ? 'Saving…' : 'Save PR'}</Text>
                   </Button>
                 </Card>
               </Animated.View>
@@ -381,8 +468,8 @@ export default function Index() {
             ) : (
               <View className="gap-3">
                 <Text variant="large">Recent PRs</Text>
-                {personalRecords.map((record, index) => (
-                  <Card key={`${record.exercise}-${index}`} className="gap-0 p-5">
+                {personalRecords.map((record) => (
+                  <Card key={record.id} className="gap-0 p-5">
                     <View className="flex-row items-center justify-between gap-4">
                       <View className="flex-1 gap-1">
                         <Text className="font-semibold">{record.exercise}</Text>
