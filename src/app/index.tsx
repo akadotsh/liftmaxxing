@@ -31,6 +31,12 @@ const ROUTINES = [
 ] as const;
 
 type Routine = (typeof ROUTINES)[number];
+type PersonalRecord = {
+  exercise: string;
+  reps: string;
+  weight: string;
+  workoutType: string;
+};
 
 function RoutineOption({
   index,
@@ -92,6 +98,16 @@ export default function Index() {
   const [selectedType, setSelectedType] = useState('');
   const [isAddingType, setIsAddingType] = useState(false);
   const [newType, setNewType] = useState('');
+  const [isLoggingPr, setIsLoggingPr] = useState(false);
+  const [draftPr, setDraftPr] = useState({ exercise: '', reps: '', weight: '' });
+  const [personalRecords, setPersonalRecords] = useState<PersonalRecord[]>([]);
+  const canSavePr = Boolean(
+    selectedType &&
+    draftPr.exercise.trim() &&
+    Number(draftPr.weight) > 0 &&
+    Number.isInteger(Number(draftPr.reps)) &&
+    Number(draftPr.reps) > 0
+  );
 
   const selectRoutine = (routine: Routine) => {
     setSelectedRoutine(routine.name);
@@ -125,6 +141,20 @@ export default function Index() {
     setWorkoutTypes(remainingTypes);
 
     if (selectedType === name) setSelectedType(remainingTypes[0] ?? '');
+  };
+
+  const savePr = () => {
+    const exercise = draftPr.exercise.trim();
+    const reps = draftPr.reps.trim();
+    const weight = draftPr.weight.trim();
+    if (!canSavePr) return;
+
+    setPersonalRecords((records) => [
+      { exercise, reps, weight, workoutType: selectedType },
+      ...records,
+    ]);
+    setDraftPr({ exercise: '', reps: '', weight: '' });
+    setIsLoggingPr(false);
   };
 
   if (!isConfigured) {
@@ -275,24 +305,101 @@ export default function Index() {
               )}
             </View>
 
-            <Card className="items-center gap-5 px-6 py-10">
-              <View className="h-20 w-20 items-center justify-center rounded-3xl bg-black">
-                <Image
-                  className="h-10 w-10"
-                  resizeMode="contain"
-                  source={require('../../assets/images/expo-logo.png')}
-                />
+            {isLoggingPr ? (
+              <Animated.View entering={FadeInDown.duration(200)}>
+                <Card className="gap-4 p-5">
+                  <View className="flex-row items-center justify-between">
+                    <View className="gap-1">
+                      <Text variant="large">Log a PR</Text>
+                      <Text variant="muted">
+                        {selectedType || 'Add a workout type above first'}
+                      </Text>
+                    </View>
+                    <Button size="sm" variant="ghost" onPress={() => setIsLoggingPr(false)}>
+                      <Text>Cancel</Text>
+                    </Button>
+                  </View>
+
+                  <View className="gap-1.5">
+                    <Text className="text-sm font-medium">Exercise</Text>
+                    <Input
+                      autoFocus
+                      placeholder="e.g. Bench press"
+                      value={draftPr.exercise}
+                      onChangeText={(exercise) => setDraftPr((pr) => ({ ...pr, exercise }))}
+                    />
+                  </View>
+
+                  <View className="flex-row gap-3">
+                    <View className="flex-1 gap-1.5">
+                      <Text className="text-sm font-medium">Weight (kg)</Text>
+                      <Input
+                        keyboardType="decimal-pad"
+                        placeholder="100"
+                        value={draftPr.weight}
+                        onChangeText={(weight) => setDraftPr((pr) => ({ ...pr, weight }))}
+                      />
+                    </View>
+                    <View className="flex-1 gap-1.5">
+                      <Text className="text-sm font-medium">Reps</Text>
+                      <Input
+                        keyboardType="number-pad"
+                        placeholder="5"
+                        value={draftPr.reps}
+                        onChangeText={(reps) => setDraftPr((pr) => ({ ...pr, reps }))}
+                      />
+                    </View>
+                  </View>
+
+                  <Button
+                    disabled={!canSavePr}
+                    size="lg"
+                    onPress={savePr}>
+                    <Text>Save PR</Text>
+                  </Button>
+                </Card>
+              </Animated.View>
+            ) : personalRecords.length === 0 ? (
+              <Card className="items-center gap-5 px-6 py-10">
+                <View className="h-20 w-20 items-center justify-center rounded-3xl bg-black">
+                  <Image
+                    className="h-10 w-10"
+                    resizeMode="contain"
+                    source={require('../../assets/images/expo-logo.png')}
+                  />
+                </View>
+                <View className="items-center gap-1.5">
+                  <Text variant="large">No PRs yet</Text>
+                  <Text className="text-muted-foreground text-center leading-6">
+                    Log your first lift to start tracking your progress.
+                  </Text>
+                </View>
+                <Button size="lg" onPress={() => setIsLoggingPr(true)}>
+                  <Text>Log your first PR</Text>
+                </Button>
+              </Card>
+            ) : (
+              <View className="gap-3">
+                <Text variant="large">Recent PRs</Text>
+                {personalRecords.map((record, index) => (
+                  <Card key={`${record.exercise}-${index}`} className="gap-0 p-5">
+                    <View className="flex-row items-center justify-between gap-4">
+                      <View className="flex-1 gap-1">
+                        <Text className="font-semibold">{record.exercise}</Text>
+                        <Text variant="muted">{record.workoutType}</Text>
+                      </View>
+                      <View className="items-end">
+                        <Text className="font-semibold">{record.weight} kg</Text>
+                        <Text variant="muted">{record.reps} reps</Text>
+                      </View>
+                    </View>
+                  </Card>
+                ))}
+                <Button size="lg" onPress={() => setIsLoggingPr(true)}>
+                  <Text>Log another PR</Text>
+                </Button>
               </View>
-              <View className="items-center gap-1.5">
-                <Text variant="large">No PRs yet</Text>
-                <Text className="text-muted-foreground text-center leading-6">
-                  Log your first lift to start tracking your progress.
-                </Text>
-              </View>
-              <Button size="lg">
-                <Text>Log your first PR</Text>
-              </Button>
-            </Card>
+            )}
           </View>
         </ScrollView>
       </Animated.View>
