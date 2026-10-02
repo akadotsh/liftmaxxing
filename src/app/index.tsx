@@ -208,51 +208,59 @@ export default function Index() {
             </View>
 
             <View className="gap-3">
-              <View className="flex-row flex-wrap gap-2">
-                {workoutTypes.map((type) => {
-                  const isSelected = selectedType === type;
+              <View className="relative">
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <View className="flex-row gap-2 pr-8">
+                    {workoutTypes.map((type) => {
+                      const isSelected = selectedType === type;
 
-                  return (
-                    <View
-                      key={type}
-                      className={cn(
-                        'border-border bg-background flex-row items-center rounded-xl border',
-                        isSelected && 'border-primary bg-primary'
-                      )}>
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityState={{ selected: isSelected }}
-                        className="py-2 pr-2 pl-3"
-                        onPress={() => setSelectedType(type)}>
-                        <Text
+                      return (
+                        <View
+                          key={type}
                           className={cn(
-                            'text-sm font-medium',
-                            isSelected && 'text-primary-foreground'
+                            'border-border bg-background flex-row items-center rounded-xl border',
+                            isSelected && 'border-primary bg-primary'
                           )}>
-                          {type}
-                        </Text>
-                      </Pressable>
-                      <Pressable
-                        accessibilityLabel={`Delete ${type}`}
-                        accessibilityRole="button"
-                        className="py-2 pr-3"
-                        hitSlop={8}
-                        onPress={() => removeWorkoutType(type)}>
-                        <Text
-                          className={cn(
-                            'text-muted-foreground text-base leading-4',
-                            isSelected && 'text-primary-foreground'
-                          )}>
-                          ×
-                        </Text>
-                      </Pressable>
-                    </View>
-                  );
-                })}
+                          <Pressable
+                            accessibilityRole="button"
+                            accessibilityState={{ selected: isSelected }}
+                            className="py-2 pr-2 pl-3"
+                            onPress={() => setSelectedType(type)}>
+                            <Text
+                              className={cn(
+                                'text-sm font-medium',
+                                isSelected && 'text-primary-foreground'
+                              )}>
+                              {type}
+                            </Text>
+                          </Pressable>
+                          <Pressable
+                            accessibilityLabel={`Delete ${type}`}
+                            accessibilityRole="button"
+                            className="py-2 pr-3"
+                            hitSlop={8}
+                            onPress={() => removeWorkoutType(type)}>
+                            <Text
+                              className={cn(
+                                'text-muted-foreground text-base leading-4',
+                                isSelected && 'text-primary-foreground'
+                              )}>
+                              ×
+                            </Text>
+                          </Pressable>
+                        </View>
+                      );
+                    })}
 
-                <Button size="sm" variant="outline" onPress={() => setIsAddingType(true)}>
-                  <Text>+ Add workout</Text>
-                </Button>
+                    <Button size="sm" variant="outline" onPress={() => setIsAddingType(true)}>
+                      <Text>+ Add workout</Text>
+                    </Button>
+                  </View>
+                </ScrollView>
+                <View
+                  pointerEvents="none"
+                  className="bg-background absolute top-0 right-0 bottom-0 w-2 shadow-lg shadow-black/30"
+                />
               </View>
 
               {isAddingType && (
