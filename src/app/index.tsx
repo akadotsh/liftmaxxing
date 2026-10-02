@@ -82,13 +82,6 @@ function RoutineOption({
                 </Text>
               )}
             </View>
-            <View
-              className={cn(
-                'border-border h-7 w-7 items-center justify-center rounded-full border',
-                isSelected && 'border-primary bg-primary'
-              )}>
-              {isSelected && <Text className="text-primary-foreground font-bold">✓</Text>}
-            </View>
           </CardContent>
         </Card>
       </Pressable>
@@ -160,9 +153,6 @@ export default function Index() {
                     <Text>Cancel</Text>
                   </Button>
                 )}
-                <Text className="text-primary text-xs font-bold tracking-widest">
-                  WELCOME TO LIFTMAXXING
-                </Text>
                 <Text variant="h3">How do you train?</Text>
                 <Text className="text-muted-foreground leading-6">
                   Pick a starting split. You can change every workout type later.
