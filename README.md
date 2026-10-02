@@ -40,7 +40,3 @@ src/
 ├── lib/            # Theme and shared utilities
 └── global.css      # NativeWind theme tokens
 ```
-
-## Product notes
-
-- [Workout routine presets](docs/workout-routines.md)
