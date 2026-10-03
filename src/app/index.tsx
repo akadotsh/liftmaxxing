@@ -544,9 +544,8 @@ export default function Index() {
                 {visibleRecords.map((record) => (
                   <Card key={record.id} className="gap-4 p-5">
                     <View className="flex-row items-start justify-between gap-3">
-                      <View className="flex-1 gap-1">
+                      <View className="flex-1">
                         <Text className="font-semibold">{record.exercise}</Text>
-                        <Text variant="muted">{record.workoutType}</Text>
                       </View>
                       <View className="flex-row gap-1">
                         <Button
