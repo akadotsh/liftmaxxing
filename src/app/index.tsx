@@ -461,17 +461,17 @@ export default function Index() {
                             chipOffsets.current.set(type, nativeEvent.layout.x);
                           }}
                           className={cn(
-                            'border-border bg-background flex-row items-center rounded-xl border',
+                            'border-border bg-background flex-row items-center rounded-2xl border',
                             isSelected && 'border-primary bg-primary'
                           )}>
                           <Pressable
                             accessibilityRole="button"
                             accessibilityState={{ selected: isSelected }}
-                            className="py-2 pr-2 pl-3"
+                            className="py-1.5 pr-1.5 pl-2.5"
                             onPress={() => void chooseWorkoutType(type)}>
                             <Text
                               className={cn(
-                                'text-sm font-medium',
+                                'text-xs font-medium',
                                 isSelected && 'text-primary-foreground'
                               )}>
                               {type}
@@ -480,12 +480,12 @@ export default function Index() {
                           <Pressable
                             accessibilityLabel={`Delete ${type}`}
                             accessibilityRole="button"
-                            className="py-2 pr-3"
+                            className="py-1.5 pr-2.5"
                             hitSlop={8}
                             onPress={() => void removeWorkoutType(type)}>
                             <Text
                               className={cn(
-                                'text-muted-foreground text-base leading-4',
+                                'text-muted-foreground text-sm leading-4',
                                 isSelected && 'text-primary-foreground'
                               )}>
                               ×
