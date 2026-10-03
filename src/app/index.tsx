@@ -581,9 +581,9 @@ export default function Index() {
                           variant="ghost"
                           onPress={() => removePr(record)}>
                           <SymbolView
-                            name={{ android: 'delete', ios: 'trash', web: 'delete' }}
+                            name={{ android: 'close', ios: 'xmark', web: 'close' }}
                             size={18}
-                            tintColor={colors.destructive}
+                            tintColor={colors.mutedForeground}
                           />
                         </Button>
                       </View>
