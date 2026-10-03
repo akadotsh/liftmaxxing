@@ -216,6 +216,9 @@ export default function Index() {
   };
 
   const chooseWorkoutType = async (workoutType: string) => {
+    setIsAddingType(false);
+    setNewType('');
+
     const chipOffset = chipOffsets.current.get(workoutType);
     if (chipOffset !== undefined) {
       chipScrollRef.current?.scrollTo({ animated: true, x: Math.max(0, chipOffset - 16) });
@@ -448,8 +451,14 @@ export default function Index() {
                       );
                     })}
 
-                    <Button size="sm" variant="outline" onPress={() => setIsAddingType(true)}>
-                      <Text>+ Add workout</Text>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onPress={() => {
+                        setIsAddingType((isAdding) => !isAdding);
+                        setNewType('');
+                      }}>
+                      <Text>{isAddingType ? 'Cancel' : '+ Add workout'}</Text>
                     </Button>
                   </View>
                 </ScrollView>
