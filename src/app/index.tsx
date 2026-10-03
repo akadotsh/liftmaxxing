@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
+import { THEME } from '@/lib/theme';
 import {
   deletePersonalRecord,
   deleteWorkoutType,
@@ -15,6 +16,8 @@ import {
   updatePersonalRecord,
 } from '@/lib/storage';
 import { cn } from '@/lib/utils';
+import { SymbolView } from 'expo-symbols';
+import { useColorScheme } from 'nativewind';
 import { useEffect, useState } from 'react';
 import { Alert, Image, Pressable, ScrollView, View } from 'react-native';
 import Animated, {
@@ -96,6 +99,8 @@ function RoutineOption({
 }
 
 export default function Index() {
+  const { colorScheme } = useColorScheme();
+  const colors = THEME[colorScheme ?? 'light'];
   const [isLoading, setIsLoading] = useState(true);
   const [isConfigured, setIsConfigured] = useState(false);
   const [isChangingRoutine, setIsChangingRoutine] = useState(false);
@@ -549,11 +554,27 @@ export default function Index() {
                       </View>
                     </View>
                     <View className="mt-3 flex-row justify-end gap-1">
-                      <Button size="sm" variant="ghost" onPress={() => startEditingPr(record)}>
-                        <Text>Edit</Text>
+                      <Button
+                        accessibilityLabel={`Edit ${record.exercise}`}
+                        size="icon"
+                        variant="ghost"
+                        onPress={() => startEditingPr(record)}>
+                        <SymbolView
+                          name={{ android: 'edit', ios: 'pencil', web: 'edit' }}
+                          size={18}
+                          tintColor={colors.mutedForeground}
+                        />
                       </Button>
-                      <Button size="sm" variant="ghost" onPress={() => removePr(record)}>
-                        <Text className="text-destructive">Delete</Text>
+                      <Button
+                        accessibilityLabel={`Delete ${record.exercise}`}
+                        size="icon"
+                        variant="ghost"
+                        onPress={() => removePr(record)}>
+                        <SymbolView
+                          name={{ android: 'delete', ios: 'trash', web: 'delete' }}
+                          size={18}
+                          tintColor={colors.destructive}
+                        />
                       </Button>
                     </View>
                   </Card>
