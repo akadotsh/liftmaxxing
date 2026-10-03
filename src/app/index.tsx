@@ -112,6 +112,9 @@ export default function Index() {
   const [draftWorkoutType, setDraftWorkoutType] = useState('');
   const [personalRecords, setPersonalRecords] = useState<PersonalRecord[]>([]);
   const [storageError, setStorageError] = useState<string>();
+  const visibleRecords = personalRecords.filter(
+    ({ workoutType }) => workoutType === selectedType
+  );
   const canSavePr = Boolean(
     draftWorkoutType &&
     draftPr.exercise.trim() &&
@@ -512,7 +515,7 @@ export default function Index() {
                   </Button>
                 </Card>
               </Animated.View>
-            ) : personalRecords.length === 0 ? (
+            ) : visibleRecords.length === 0 ? (
               <Card className="items-center gap-5 px-6 py-10">
                 <View className="h-20 w-20 items-center justify-center rounded-3xl bg-black">
                   <Image
@@ -522,19 +525,23 @@ export default function Index() {
                   />
                 </View>
                 <View className="items-center gap-1.5">
-                  <Text variant="large">No PRs yet</Text>
+                  <Text variant="large">
+                    {selectedType ? `No ${selectedType} PRs yet` : 'No PRs yet'}
+                  </Text>
                   <Text className="text-muted-foreground text-center leading-6">
-                    Log your first lift to start tracking your progress.
+                    {selectedType
+                      ? `Log your first ${selectedType.toLowerCase()} lift to start tracking progress.`
+                      : 'Add a workout type above to start tracking progress.'}
                   </Text>
                 </View>
-                <Button size="lg" onPress={startNewPr}>
-                  <Text>Log your first PR</Text>
+                <Button disabled={!selectedType} size="lg" onPress={startNewPr}>
+                  <Text>Log a PR</Text>
                 </Button>
               </Card>
             ) : (
               <View className="gap-3">
-                <Text variant="large">Recent PRs</Text>
-                {personalRecords.map((record) => (
+                <Text variant="large">Recent {selectedType} PRs</Text>
+                {visibleRecords.map((record) => (
                   <Card key={record.id} className="gap-0 p-5">
                     <View className="flex-row items-center justify-between gap-4">
                       <View className="flex-1 gap-1">
