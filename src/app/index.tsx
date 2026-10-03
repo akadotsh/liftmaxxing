@@ -18,7 +18,7 @@ import {
 import { cn } from '@/lib/utils';
 import { SymbolView } from 'expo-symbols';
 import { useColorScheme } from 'nativewind';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, Image, Pressable, ScrollView, View } from 'react-native';
 import Animated, {
   FadeIn,
@@ -101,6 +101,8 @@ function RoutineOption({
 export default function Index() {
   const { colorScheme } = useColorScheme();
   const colors = THEME[colorScheme ?? 'light'];
+  const chipScrollRef = useRef<ScrollView>(null);
+  const chipOffsets = useRef(new Map<string, number>());
   const [isLoading, setIsLoading] = useState(true);
   const [isConfigured, setIsConfigured] = useState(false);
   const [isChangingRoutine, setIsChangingRoutine] = useState(false);
@@ -192,6 +194,7 @@ export default function Index() {
       setNewType('');
       setIsAddingType(false);
       setStorageError(undefined);
+      requestAnimationFrame(() => chipScrollRef.current?.scrollToEnd({ animated: true }));
     } catch {
       setStorageError('Could not save that workout type.');
     }
@@ -213,6 +216,11 @@ export default function Index() {
   };
 
   const chooseWorkoutType = async (workoutType: string) => {
+    const chipOffset = chipOffsets.current.get(workoutType);
+    if (chipOffset !== undefined) {
+      chipScrollRef.current?.scrollTo({ animated: true, x: Math.max(0, chipOffset - 16) });
+    }
+
     try {
       await saveSelectedWorkoutType(workoutType);
       setSelectedType(workoutType);
@@ -391,7 +399,10 @@ export default function Index() {
 
             <View className="gap-3">
               <View className="relative">
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <ScrollView
+                  ref={chipScrollRef}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}>
                   <View className="flex-row gap-2 pr-8">
                     {workoutTypes.map((type) => {
                       const isSelected = (isLoggingPr ? draftWorkoutType : selectedType) === type;
@@ -399,6 +410,9 @@ export default function Index() {
                       return (
                         <View
                           key={type}
+                          onLayout={({ nativeEvent }) => {
+                            chipOffsets.current.set(type, nativeEvent.layout.x);
+                          }}
                           className={cn(
                             'border-border bg-background flex-row items-center rounded-xl border',
                             isSelected && 'border-primary bg-primary'
