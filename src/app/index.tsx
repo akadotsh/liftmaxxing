@@ -543,19 +543,18 @@ export default function Index() {
                 <Text variant="large">Recent {selectedType} PRs</Text>
                 {visibleRecords.map((record) => (
                   <Card key={record.id} className="gap-0 p-5">
-                    <View className="flex-row items-center justify-between gap-4">
+                    <View className="flex-row items-center gap-2">
                       <View className="flex-1 gap-1">
                         <Text className="font-semibold">{record.exercise}</Text>
                         <Text variant="muted">{record.workoutType}</Text>
                       </View>
-                      <View className="items-end">
+                      <View className="mr-1 items-end">
                         <Text className="font-semibold">{record.weight} kg</Text>
                         <Text variant="muted">{record.reps} reps</Text>
                       </View>
-                    </View>
-                    <View className="mt-3 flex-row justify-end gap-1">
                       <Button
                         accessibilityLabel={`Edit ${record.exercise}`}
+                        className="h-9 w-9"
                         size="icon"
                         variant="ghost"
                         onPress={() => startEditingPr(record)}>
@@ -567,6 +566,7 @@ export default function Index() {
                       </Button>
                       <Button
                         accessibilityLabel={`Delete ${record.exercise}`}
+                        className="h-9 w-9"
                         size="icon"
                         variant="ghost"
                         onPress={() => removePr(record)}>
