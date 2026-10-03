@@ -365,8 +365,7 @@ export default function Index() {
   return (
     <SafeAreaView className="bg-background flex-1">
       <Animated.View entering={FadeIn.duration(200)} style={{ flex: 1 }}>
-        <ScrollView contentInsetAdjustmentBehavior="automatic">
-          <View className="gap-6 px-5 py-6">
+        <View className="gap-6 px-5 pt-6 pb-4">
             <View className="flex-row items-start justify-between gap-4">
               <View className="flex-1 gap-1">
                 <Text variant="h3">liftmaxxing</Text>
@@ -458,7 +457,14 @@ export default function Index() {
                 </View>
               )}
             </View>
+        </View>
 
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}>
+          <View className="px-5 py-2 pb-4">
             {isLoggingPr ? (
               <Animated.View entering={FadeInDown.duration(200)}>
                 <Card className="gap-4 p-5">
@@ -505,14 +511,6 @@ export default function Index() {
                     </View>
                   </View>
 
-                  <Button
-                    disabled={!canSavePr || isSavingPr}
-                    size="lg"
-                    onPress={savePr}>
-                    <Text>
-                      {isSavingPr ? 'Saving…' : editingPrId ? 'Update PR' : 'Save PR'}
-                    </Text>
-                  </Button>
                 </Card>
               </Animated.View>
             ) : visibleRecords.length === 0 ? (
@@ -534,9 +532,6 @@ export default function Index() {
                       : 'Add a workout type above to start tracking progress.'}
                   </Text>
                 </View>
-                <Button disabled={!selectedType} size="lg" onPress={startNewPr}>
-                  <Text>Log a PR</Text>
-                </Button>
               </Card>
             ) : (
               <View className="gap-3">
@@ -563,13 +558,25 @@ export default function Index() {
                     </View>
                   </Card>
                 ))}
-                <Button size="lg" onPress={startNewPr}>
-                  <Text>Log another PR</Text>
-                </Button>
               </View>
             )}
           </View>
         </ScrollView>
+
+        <View className="border-border bg-background border-t px-5 pt-3 pb-2">
+          {isLoggingPr ? (
+            <Button
+              disabled={!canSavePr || isSavingPr}
+              size="lg"
+              onPress={savePr}>
+              <Text>{isSavingPr ? 'Saving…' : editingPrId ? 'Update PR' : 'Save PR'}</Text>
+            </Button>
+          ) : (
+            <Button disabled={!selectedType} size="lg" onPress={startNewPr}>
+              <Text>{visibleRecords.length === 0 ? 'Log a PR' : 'Log another PR'}</Text>
+            </Button>
+          )}
+        </View>
       </Animated.View>
     </SafeAreaView>
   );
