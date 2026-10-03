@@ -542,40 +542,42 @@ export default function Index() {
               <View className="gap-3">
                 <Text variant="large">Recent {selectedType} PRs</Text>
                 {visibleRecords.map((record) => (
-                  <Card key={record.id} className="gap-0 p-5">
-                    <View className="flex-row items-center gap-2">
+                  <Card key={record.id} className="gap-4 p-5">
+                    <View className="flex-row items-start justify-between gap-3">
                       <View className="flex-1 gap-1">
                         <Text className="font-semibold">{record.exercise}</Text>
                         <Text variant="muted">{record.workoutType}</Text>
                       </View>
-                      <View className="mr-1 items-end">
-                        <Text className="font-semibold">{record.weight} kg</Text>
-                        <Text variant="muted">{record.reps} reps</Text>
+                      <View className="flex-row gap-1">
+                        <Button
+                          accessibilityLabel={`Edit ${record.exercise}`}
+                          className="h-9 w-9"
+                          size="icon"
+                          variant="ghost"
+                          onPress={() => startEditingPr(record)}>
+                          <SymbolView
+                            name={{ android: 'edit', ios: 'pencil', web: 'edit' }}
+                            size={18}
+                            tintColor={colors.mutedForeground}
+                          />
+                        </Button>
+                        <Button
+                          accessibilityLabel={`Delete ${record.exercise}`}
+                          className="h-9 w-9"
+                          size="icon"
+                          variant="ghost"
+                          onPress={() => removePr(record)}>
+                          <SymbolView
+                            name={{ android: 'delete', ios: 'trash', web: 'delete' }}
+                            size={18}
+                            tintColor={colors.destructive}
+                          />
+                        </Button>
                       </View>
-                      <Button
-                        accessibilityLabel={`Edit ${record.exercise}`}
-                        className="h-9 w-9"
-                        size="icon"
-                        variant="ghost"
-                        onPress={() => startEditingPr(record)}>
-                        <SymbolView
-                          name={{ android: 'edit', ios: 'pencil', web: 'edit' }}
-                          size={18}
-                          tintColor={colors.mutedForeground}
-                        />
-                      </Button>
-                      <Button
-                        accessibilityLabel={`Delete ${record.exercise}`}
-                        className="h-9 w-9"
-                        size="icon"
-                        variant="ghost"
-                        onPress={() => removePr(record)}>
-                        <SymbolView
-                          name={{ android: 'delete', ios: 'trash', web: 'delete' }}
-                          size={18}
-                          tintColor={colors.destructive}
-                        />
-                      </Button>
+                    </View>
+                    <View className="flex-row items-baseline gap-2">
+                      <Text className="text-2xl font-bold">{record.weight} kg</Text>
+                      <Text variant="muted">{record.reps} reps</Text>
                     </View>
                   </Card>
                 ))}
