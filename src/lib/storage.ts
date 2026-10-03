@@ -4,6 +4,7 @@ export type PersonalRecord = {
   createdAt: number;
   exercise: string;
   id: number;
+  performedOn: string;
   reps: number;
   weight: number;
   workoutType: string;
@@ -33,12 +34,23 @@ export async function initializeDatabase() {
       weight_kg REAL NOT NULL CHECK (weight_kg > 0),
       reps INTEGER NOT NULL CHECK (reps > 0),
       workout_type TEXT NOT NULL,
+      performed_on TEXT NOT NULL,
       created_at INTEGER NOT NULL
     );
 
     CREATE INDEX IF NOT EXISTS personal_records_created_at
       ON personal_records (created_at DESC);
   `);
+
+  const columns = await db.getAllAsync<{ name: string }>('PRAGMA table_info(personal_records)');
+  if (!columns.some(({ name }) => name === 'performed_on')) {
+    await db.execAsync(`
+      ALTER TABLE personal_records ADD COLUMN performed_on TEXT;
+      UPDATE personal_records
+      SET performed_on = date(created_at / 1000, 'unixepoch', 'localtime')
+      WHERE performed_on IS NULL;
+    `);
+  }
 }
 
 export async function loadAppData() {
@@ -55,9 +67,10 @@ export async function loadAppData() {
         weight_kg AS weight,
         reps,
         workout_type AS workoutType,
+        COALESCE(performed_on, date(created_at / 1000, 'unixepoch', 'localtime')) AS performedOn,
         created_at AS createdAt
       FROM personal_records
-      ORDER BY created_at DESC, id DESC
+      ORDER BY performedOn DESC, created_at DESC, id DESC
     `),
   ]);
   const settings = Object.fromEntries(settingRows.map(({ key, value }) => [key, value]));
@@ -147,12 +160,13 @@ export async function insertPersonalRecord(
   const createdAt = Date.now();
   const result = await db.runAsync(
     `INSERT INTO personal_records
-      (exercise, weight_kg, reps, workout_type, created_at)
-      VALUES (?, ?, ?, ?, ?)`,
+      (exercise, weight_kg, reps, workout_type, performed_on, created_at)
+      VALUES (?, ?, ?, ?, ?, ?)`,
     record.exercise,
     record.weight,
     record.reps,
     record.workoutType,
+    record.performedOn,
     createdAt
   );
 
@@ -163,12 +177,13 @@ export async function updatePersonalRecord(record: PersonalRecord) {
   const db = await database;
   await db.runAsync(
     `UPDATE personal_records
-      SET exercise = ?, weight_kg = ?, reps = ?, workout_type = ?
+      SET exercise = ?, weight_kg = ?, reps = ?, workout_type = ?, performed_on = ?
       WHERE id = ?`,
     record.exercise,
     record.weight,
     record.reps,
     record.workoutType,
+    record.performedOn,
     record.id
   );
 }

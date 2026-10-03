@@ -16,10 +16,11 @@ import {
   updatePersonalRecord,
 } from '@/lib/storage';
 import { cn } from '@/lib/utils';
+import { DateTimePicker } from '@expo/ui/community/datetime-picker';
 import { SymbolView } from 'expo-symbols';
 import { useColorScheme } from 'nativewind';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, View } from 'react-native';
+import { Alert, Image, Platform, Pressable, ScrollView, View } from 'react-native';
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -46,6 +47,40 @@ const ROUTINES = [
 ] as const;
 
 type Routine = (typeof ROUTINES)[number];
+
+const formatDateKey = (date: Date) =>
+  [date.getFullYear(), date.getMonth() + 1, date.getDate()]
+    .map((part, index) => String(part).padStart(index === 0 ? 4 : 2, '0'))
+    .join('-');
+
+const parseDateKey = (date: string) => {
+  const [year, month, day] = date.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
+const displayDate = (date: string) =>
+  parseDateKey(date).toLocaleDateString(undefined, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+
+const isValidDateKey = (date: string) =>
+  /^\d{4}-\d{2}-\d{2}$/.test(date) &&
+  formatDateKey(parseDateKey(date)) === date &&
+  date <= formatDateKey(new Date());
+
+const createDraftPr = () => ({
+  exercise: '',
+  performedOn: formatDateKey(new Date()),
+  reps: '',
+  weight: '',
+});
+
+const sortPersonalRecords = (records: PersonalRecord[]) =>
+  [...records].sort(
+    (a, b) => b.performedOn.localeCompare(a.performedOn) || b.createdAt - a.createdAt
+  );
 
 function RoutineOption({
   index,
@@ -114,8 +149,9 @@ export default function Index() {
   const [newType, setNewType] = useState('');
   const [isLoggingPr, setIsLoggingPr] = useState(false);
   const [isSavingPr, setIsSavingPr] = useState(false);
+  const [isPickingDate, setIsPickingDate] = useState(false);
   const [editingPrId, setEditingPrId] = useState<number>();
-  const [draftPr, setDraftPr] = useState({ exercise: '', reps: '', weight: '' });
+  const [draftPr, setDraftPr] = useState(createDraftPr);
   const [draftWorkoutType, setDraftWorkoutType] = useState('');
   const [personalRecords, setPersonalRecords] = useState<PersonalRecord[]>([]);
   const [storageError, setStorageError] = useState<string>();
@@ -125,6 +161,7 @@ export default function Index() {
   const canSavePr = Boolean(
     draftWorkoutType &&
     draftPr.exercise.trim() &&
+    isValidDateKey(draftPr.performedOn) &&
     Number(draftPr.weight) > 0 &&
     Number.isInteger(Number(draftPr.reps)) &&
     Number(draftPr.reps) > 0
@@ -235,27 +272,31 @@ export default function Index() {
   };
 
   const closePrForm = () => {
-    setDraftPr({ exercise: '', reps: '', weight: '' });
+    setDraftPr(createDraftPr());
     setDraftWorkoutType('');
     setEditingPrId(undefined);
+    setIsPickingDate(false);
     setIsLoggingPr(false);
   };
 
   const startNewPr = () => {
-    setDraftPr({ exercise: '', reps: '', weight: '' });
+    setDraftPr(createDraftPr());
     setDraftWorkoutType(selectedType);
     setEditingPrId(undefined);
+    setIsPickingDate(false);
     setIsLoggingPr(true);
   };
 
   const startEditingPr = (record: PersonalRecord) => {
     setDraftPr({
       exercise: record.exercise,
+      performedOn: record.performedOn,
       reps: String(record.reps),
       weight: String(record.weight),
     });
     setDraftWorkoutType(record.workoutType);
     setEditingPrId(record.id);
+    setIsPickingDate(false);
     setIsLoggingPr(true);
   };
 
@@ -267,6 +308,7 @@ export default function Index() {
     try {
       const values = {
         exercise,
+        performedOn: draftPr.performedOn,
         reps: Number(draftPr.reps),
         weight: Number(draftPr.weight),
         workoutType: draftWorkoutType,
@@ -279,11 +321,13 @@ export default function Index() {
         const updatedRecord = { ...currentRecord, ...values };
         await updatePersonalRecord(updatedRecord);
         setPersonalRecords((records) =>
-          records.map((record) => (record.id === editingPrId ? updatedRecord : record))
+          sortPersonalRecords(
+            records.map((record) => (record.id === editingPrId ? updatedRecord : record))
+          )
         );
       } else {
         const record = await insertPersonalRecord(values);
-        setPersonalRecords((records) => [record, ...records]);
+        setPersonalRecords((records) => sortPersonalRecords([record, ...records]));
       }
 
       closePrForm();
@@ -539,6 +583,63 @@ export default function Index() {
                     </View>
                   </View>
 
+                  <View className="gap-1.5">
+                    <Text className="text-sm font-medium">Date</Text>
+                    {Platform.OS === 'ios' ? (
+                      <View className="border-input bg-background h-10 justify-center rounded-xl border px-3">
+                        <DateTimePicker
+                          display="compact"
+                          maximumDate={new Date()}
+                          mode="date"
+                          value={parseDateKey(draftPr.performedOn)}
+                          onValueChange={(_, date) =>
+                            setDraftPr((pr) => ({ ...pr, performedOn: formatDateKey(date) }))
+                          }
+                        />
+                      </View>
+                    ) : Platform.OS === 'android' ? (
+                      <>
+                        <Pressable
+                          accessibilityLabel={`PR date: ${displayDate(draftPr.performedOn)}`}
+                          accessibilityRole="button"
+                          className="border-input bg-background h-10 flex-row items-center justify-between rounded-xl border px-3"
+                          onPress={() => setIsPickingDate(true)}>
+                          <Text>{displayDate(draftPr.performedOn)}</Text>
+                          <SymbolView
+                            name={{
+                              android: 'calendar_month',
+                              ios: 'calendar',
+                              web: 'calendar_month',
+                            }}
+                            size={18}
+                            tintColor={colors.mutedForeground}
+                          />
+                        </Pressable>
+                        {isPickingDate && (
+                          <DateTimePicker
+                            maximumDate={new Date()}
+                            mode="date"
+                            presentation="dialog"
+                            value={parseDateKey(draftPr.performedOn)}
+                            onDismiss={() => setIsPickingDate(false)}
+                            onValueChange={(_, date) => {
+                              setDraftPr((pr) => ({ ...pr, performedOn: formatDateKey(date) }));
+                              setIsPickingDate(false);
+                            }}
+                          />
+                        )}
+                      </>
+                    ) : (
+                      <Input
+                        placeholder="YYYY-MM-DD"
+                        value={draftPr.performedOn}
+                        onChangeText={(performedOn) =>
+                          setDraftPr((pr) => ({ ...pr, performedOn }))
+                        }
+                      />
+                    )}
+                  </View>
+
                 </Card>
               </Animated.View>
             ) : visibleRecords.length === 0 ? (
@@ -569,6 +670,9 @@ export default function Index() {
                     <View className="flex-row items-start justify-between gap-3">
                       <View className="flex-1">
                         <Text className="font-semibold">{record.exercise}</Text>
+                        <Text className="text-muted-foreground mt-1 text-xs">
+                          {displayDate(record.performedOn)}
+                        </Text>
                       </View>
                       <View className="flex-row gap-1">
                         <Button
