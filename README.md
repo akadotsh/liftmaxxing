@@ -1,6 +1,10 @@
-# liftmaxxing
+<p align="center">
+  <img src="assets/images/liftmaxxing-icon.png" alt="Liftmaxxing logo" width="120" />
+</p>
 
-A mobile-first personal-record tracker for gym workouts. Track the maximum weight and reps reached for exercises across chest, legs, and full-body workout days.
+<h1 align="center">liftmaxxing</h1>
+
+A mobile-first personal-record tracker for gym workouts. Track your maximum weight and reps for any exercise and workout routine.
 
 ## Current status
 
