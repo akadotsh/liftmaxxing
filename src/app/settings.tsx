@@ -48,7 +48,7 @@ function SettingPicker<T extends string>({
 }) {
   if (Platform.OS === 'web') {
     return (
-      <Host colorScheme={colorScheme} matchContents={{ vertical: true }} style={{ width: 110 }}>
+      <Host colorScheme={colorScheme} matchContents={{ vertical: true }} style={{ width: 80 }}>
         <Picker<T> enabled={!disabled} selectedValue={value} onValueChange={onChange}>
           {options.map((option) => (
             <Picker.Item key={option.value} label={option.label} value={option.value} />
@@ -68,12 +68,13 @@ function SettingPicker<T extends string>({
         title: option.label,
       }))}
       colorScheme={colorScheme}
+      style={{ width: 80 }}
       onPressAction={({ nativeEvent }) => onChange(nativeEvent.event as T)}>
       <View
         accessible
         accessibilityLabel={`${label}: ${selectedLabel}`}
         accessibilityRole="button"
-        className="flex-row items-center gap-1 py-2 pl-3"
+        className="w-full flex-row items-center justify-end gap-1 py-2"
         style={{ opacity: disabled ? 0.5 : 1 }}>
         <Text className="text-muted-foreground text-sm font-medium">{selectedLabel}</Text>
         <SymbolView
