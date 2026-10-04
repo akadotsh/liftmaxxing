@@ -436,19 +436,27 @@ export default function Index() {
               <View className="flex-1 gap-1">
                 <Text variant="h3">liftmaxxing</Text>
                 <Text variant="muted">Track every personal record.</Text>
-                {storageError && <Text className="text-destructive text-sm">{storageError}</Text>}
-              </View>
-              <View className="flex-row items-center">
-                <Button
-                  size="sm"
-                  variant="ghost"
+                <Pressable
+                  accessibilityHint="Opens workout split selection"
+                  accessibilityLabel={`Current split: ${configuredRoutine}`}
+                  accessibilityRole="button"
+                  className="mt-1 flex-row items-center self-start gap-1.5 py-1 pr-2"
+                  hitSlop={8}
                   onPress={() => {
                     closePrForm();
                     setIsChangingRoutine(true);
                     setIsConfigured(false);
                   }}>
-                  <Text>Change split</Text>
-                </Button>
+                  <Text className="text-sm font-medium">{configuredRoutine}</Text>
+                  <SymbolView
+                    name={{ android: 'edit', ios: 'pencil', web: 'edit' }}
+                    size={14}
+                    tintColor={colors.mutedForeground}
+                  />
+                </Pressable>
+                {storageError && <Text className="text-destructive text-sm">{storageError}</Text>}
+              </View>
+              <View className="flex-row items-center">
                 <Button
                   accessibilityLabel="Open PR history"
                   size="icon"
