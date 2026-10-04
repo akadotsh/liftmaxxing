@@ -123,9 +123,11 @@ export default function Settings() {
   };
 
   const changeWeightUnit = async (nextUnit: WeightUnit) => {
-    setWeightUnit(nextUnit);
+    if (nextUnit === weightUnit) return;
+
     try {
       await savePreference('weightUnit', nextUnit);
+      setWeightUnit(nextUnit);
       setError(undefined);
     } catch {
       setError('Could not save your weight unit.');
