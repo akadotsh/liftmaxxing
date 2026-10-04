@@ -9,6 +9,7 @@ import {
 } from '@/lib/storage';
 import { THEME } from '@/lib/theme';
 import { Host, Picker } from '@expo/ui';
+import { MenuView } from '@expo/ui/community/menu';
 import { SymbolView } from 'expo-symbols';
 import { router } from 'expo-router';
 import {
@@ -16,7 +17,7 @@ import {
   useColorScheme,
 } from 'nativewind';
 import { useEffect, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Platform, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const THEME_OPTIONS: { label: string; value: ThemeMode }[] = [
@@ -29,6 +30,62 @@ const UNIT_OPTIONS: { label: string; value: WeightUnit }[] = [
   { label: 'Kilograms', value: 'kg' },
   { label: 'Pounds', value: 'lb' },
 ];
+
+function SettingPicker<T extends string>({
+  colorScheme,
+  disabled,
+  label,
+  onChange,
+  options,
+  value,
+}: {
+  colorScheme: 'dark' | 'light';
+  disabled: boolean;
+  label: string;
+  onChange: (value: T) => void;
+  options: { label: string; value: T }[];
+  value: T;
+}) {
+  if (Platform.OS === 'web') {
+    return (
+      <Host colorScheme={colorScheme} matchContents={{ vertical: true }} style={{ width: 110 }}>
+        <Picker<T> enabled={!disabled} selectedValue={value} onValueChange={onChange}>
+          {options.map((option) => (
+            <Picker.Item key={option.value} label={option.label} value={option.value} />
+          ))}
+        </Picker>
+      </Host>
+    );
+  }
+
+  const selectedLabel = options.find((option) => option.value === value)?.label ?? value;
+
+  return (
+    <MenuView
+      actions={options.map((option) => ({
+        attributes: { disabled },
+        id: option.value,
+        state: option.value === value ? 'on' : 'off',
+        title: option.label,
+      }))}
+      colorScheme={colorScheme}
+      onPressAction={({ nativeEvent }) => onChange(nativeEvent.event as T)}>
+      <View
+        accessible
+        accessibilityLabel={`${label}: ${selectedLabel}`}
+        accessibilityRole="button"
+        className="flex-row items-center gap-1 py-2 pl-3"
+        style={{ opacity: disabled ? 0.5 : 1 }}>
+        <Text className="text-muted-foreground text-sm font-medium">{selectedLabel}</Text>
+        <SymbolView
+          name={{ android: 'arrow_drop_down', ios: 'chevron.down', web: 'arrow_drop_down' }}
+          size={14}
+          tintColor={THEME[colorScheme].mutedForeground}
+        />
+      </View>
+    </MenuView>
+  );
+}
 
 export default function Settings() {
   const { colorScheme } = useColorScheme();
@@ -95,44 +152,28 @@ export default function Settings() {
         showsVerticalScrollIndicator={false}>
         {error && <Text className="text-destructive py-4 text-sm">{error}</Text>}
 
-        <View className="border-border flex-row items-center gap-4 border-b py-5">
-          <View className="flex-1 gap-1">
-            <Text className="font-semibold">Theme</Text>
-            <Text variant="muted">Choose how liftmaxxing looks.</Text>
-          </View>
-          <Host
+        <View className="border-border flex-row items-center gap-4 border-b py-4">
+          <Text className="flex-1 font-semibold">Theme</Text>
+          <SettingPicker
             colorScheme={colorScheme ?? 'light'}
-            matchContents={{ vertical: true }}
-            style={{ width: 110 }}>
-            <Picker<ThemeMode>
-              enabled={!isLoading}
-              selectedValue={themeMode}
-              onValueChange={(value) => void changeTheme(value)}>
-              {THEME_OPTIONS.map((option) => (
-                <Picker.Item key={option.value} label={option.label} value={option.value} />
-              ))}
-            </Picker>
-          </Host>
+            disabled={isLoading}
+            label="Theme"
+            options={THEME_OPTIONS}
+            value={themeMode}
+            onChange={(value) => void changeTheme(value)}
+          />
         </View>
 
-        <View className="border-border flex-row items-center gap-4 border-b py-5">
-          <View className="flex-1 gap-1">
-            <Text className="font-semibold">Weight unit</Text>
-            <Text variant="muted">Your saved data stays accurate when switching units.</Text>
-          </View>
-          <Host
+        <View className="border-border flex-row items-center gap-4 border-b py-4">
+          <Text className="flex-1 font-semibold">Weight unit</Text>
+          <SettingPicker
             colorScheme={colorScheme ?? 'light'}
-            matchContents={{ vertical: true }}
-            style={{ width: 110 }}>
-            <Picker<WeightUnit>
-              enabled={!isLoading}
-              selectedValue={weightUnit}
-              onValueChange={(value) => void changeWeightUnit(value)}>
-              {UNIT_OPTIONS.map((option) => (
-                <Picker.Item key={option.value} label={option.label} value={option.value} />
-              ))}
-            </Picker>
-          </Host>
+            disabled={isLoading}
+            label="Weight unit"
+            options={UNIT_OPTIONS}
+            value={weightUnit}
+            onChange={(value) => void changeWeightUnit(value)}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
