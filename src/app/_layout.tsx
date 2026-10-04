@@ -3,6 +3,7 @@ import '../global.css';
 import { PortalHost } from '@rn-primitives/portal';
 import { ThemeProvider } from 'expo-router/react-navigation';
 import { Stack } from 'expo-router';
+import * as SystemUI from 'expo-system-ui';
 import { colorScheme as nativeWindColorScheme, useColorScheme } from 'nativewind';
 import { useEffect } from 'react';
 
@@ -12,6 +13,10 @@ import { NAV_THEME } from '@/lib/theme';
 export default function RootLayout() {
   const { colorScheme } = useColorScheme();
   const theme = NAV_THEME[colorScheme ?? 'light'];
+
+  useEffect(() => {
+    void SystemUI.setBackgroundColorAsync(theme.colors.background);
+  }, [theme.colors.background]);
 
   useEffect(() => {
     const loadTheme = async () => {
