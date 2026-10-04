@@ -9,10 +9,16 @@ import { NAV_THEME } from '@/lib/theme';
 
 export default function RootLayout() {
   const { colorScheme } = useColorScheme();
+  const theme = NAV_THEME[colorScheme ?? 'light'];
 
   return (
-    <ThemeProvider value={NAV_THEME[colorScheme ?? 'light']}>
-      <Stack screenOptions={{ headerShown: false }} />
+    <ThemeProvider value={theme}>
+      <Stack
+        screenOptions={{
+          contentStyle: { backgroundColor: theme.colors.background },
+          headerShown: false,
+        }}
+      />
       <PortalHost />
     </ThemeProvider>
   );
