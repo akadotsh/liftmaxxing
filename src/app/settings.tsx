@@ -65,7 +65,6 @@ function SettingPicker<T extends string>({
       actions={options.map((option) => ({
         attributes: { disabled },
         id: option.value,
-        state: option.value === value ? 'on' : 'off',
         title: option.label,
       }))}
       colorScheme={colorScheme}
