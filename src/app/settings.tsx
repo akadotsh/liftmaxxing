@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Text } from '@/components/ui/text';
 import {
   initializeDatabase,
@@ -9,6 +8,7 @@ import {
   type WeightUnit,
 } from '@/lib/storage';
 import { THEME } from '@/lib/theme';
+import { Host, Picker } from '@expo/ui';
 import { SymbolView } from 'expo-symbols';
 import { router } from 'expo-router';
 import {
@@ -91,50 +91,49 @@ export default function Settings() {
 
       <ScrollView
         className="flex-1"
-        contentContainerClassName="gap-4 p-5"
+        contentContainerClassName="px-5"
         showsVerticalScrollIndicator={false}>
-        {error && <Text className="text-destructive text-sm">{error}</Text>}
+        {error && <Text className="text-destructive py-4 text-sm">{error}</Text>}
 
-        <Card className="gap-4 p-5">
-          <View className="gap-1">
-            <Text variant="large">Theme</Text>
+        <View className="border-border flex-row items-center gap-4 border-b py-5">
+          <View className="flex-1 gap-1">
+            <Text className="font-semibold">Theme</Text>
             <Text variant="muted">Choose how liftmaxxing looks.</Text>
           </View>
-          <View className="flex-row gap-2">
-            {THEME_OPTIONS.map((option) => (
-              <Button
-                key={option.value}
-                accessibilityState={{ selected: themeMode === option.value }}
-                className="flex-1 px-2"
-                disabled={isLoading}
-                size="sm"
-                variant={themeMode === option.value ? 'default' : 'outline'}
-                onPress={() => void changeTheme(option.value)}>
-                <Text>{option.label}</Text>
-              </Button>
-            ))}
-          </View>
-        </Card>
+          <Host
+            colorScheme={colorScheme ?? 'light'}
+            matchContents={{ vertical: true }}
+            style={{ width: 110 }}>
+            <Picker<ThemeMode>
+              enabled={!isLoading}
+              selectedValue={themeMode}
+              onValueChange={(value) => void changeTheme(value)}>
+              {THEME_OPTIONS.map((option) => (
+                <Picker.Item key={option.value} label={option.label} value={option.value} />
+              ))}
+            </Picker>
+          </Host>
+        </View>
 
-        <Card className="gap-4 p-5">
-          <View className="gap-1">
-            <Text variant="large">Weight unit</Text>
+        <View className="border-border flex-row items-center gap-4 border-b py-5">
+          <View className="flex-1 gap-1">
+            <Text className="font-semibold">Weight unit</Text>
             <Text variant="muted">Your saved data stays accurate when switching units.</Text>
           </View>
-          <View className="flex-row gap-2">
-            {UNIT_OPTIONS.map((option) => (
-              <Button
-                key={option.value}
-                accessibilityState={{ selected: weightUnit === option.value }}
-                className="flex-1"
-                disabled={isLoading}
-                variant={weightUnit === option.value ? 'default' : 'outline'}
-                onPress={() => void changeWeightUnit(option.value)}>
-                <Text>{option.label}</Text>
-              </Button>
-            ))}
-          </View>
-        </Card>
+          <Host
+            colorScheme={colorScheme ?? 'light'}
+            matchContents={{ vertical: true }}
+            style={{ width: 110 }}>
+            <Picker<WeightUnit>
+              enabled={!isLoading}
+              selectedValue={weightUnit}
+              onValueChange={(value) => void changeWeightUnit(value)}>
+              {UNIT_OPTIONS.map((option) => (
+                <Picker.Item key={option.value} label={option.label} value={option.value} />
+              ))}
+            </Picker>
+          </Host>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
