@@ -1,8 +1,10 @@
+import { NewPrBadge } from '@/components/new-pr-badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { displayDate, formatDateKey, isValidDateKey, parseDateKey } from '@/lib/date';
+import { beatsPersonalRecord, findPreviousBest, getNewPrIds } from '@/lib/pr';
 import { THEME } from '@/lib/theme';
 import {
   deletePersonalRecord,
@@ -139,30 +141,17 @@ export default function Index() {
   const [personalRecords, setPersonalRecords] = useState<PersonalRecord[]>([]);
   const [weightUnit, setWeightUnit] = useState<WeightUnit>('kg');
   const [storageError, setStorageError] = useState<string>();
-  const previousBest = useMemo(() => {
-    const exercise = draftPr.exercise.trim().toLowerCase();
-
-    return personalRecords.reduce<PersonalRecord | undefined>((best, record) => {
-      if (
-        !exercise ||
-        record.id === editingPrId ||
-        record.exercise.trim().toLowerCase() !== exercise ||
-        record.performedOn > draftPr.performedOn
-      ) {
-        return best;
-      }
-
-      if (
-        !best ||
-        record.weight > best.weight ||
-        (record.weight === best.weight && record.reps > best.reps)
-      ) {
-        return record;
-      }
-
-      return best;
-    }, undefined);
-  }, [draftPr.exercise, draftPr.performedOn, editingPrId, personalRecords]);
+  const previousBest = useMemo(
+    () =>
+      findPreviousBest(
+        personalRecords,
+        draftPr.exercise,
+        draftPr.performedOn,
+        editingPrId
+      ),
+    [draftPr.exercise, draftPr.performedOn, editingPrId, personalRecords]
+  );
+  const newPrIds = useMemo(() => getNewPrIds(personalRecords), [personalRecords]);
   const currentWeight = Number(draftPr.weight);
   const currentReps = Number(draftPr.reps);
   const previousWeight = previousBest
@@ -190,6 +179,14 @@ export default function Index() {
     Number.isInteger(Number(draftPr.reps)) &&
     Number(draftPr.reps) > 0
   );
+  const isDraftNewPr =
+    canSavePr &&
+    beatsPersonalRecord(
+      { reps: currentReps, weight: currentWeight },
+      previousBest && previousWeight !== undefined
+        ? { reps: previousBest.reps, weight: previousWeight }
+        : undefined
+    );
 
   useEffect(() => {
     let isMounted = true;
@@ -620,7 +617,10 @@ export default function Index() {
                 <Card className="gap-4 p-5">
                   <View className="flex-row items-center justify-between">
                     <View className="gap-1">
-                      <Text variant="large">{editingPrId ? 'Edit PR' : 'Log a PR'}</Text>
+                      <View className="flex-row items-center gap-2">
+                        <Text variant="large">{editingPrId ? 'Edit PR' : 'Log a PR'}</Text>
+                        {isDraftNewPr && <NewPrBadge />}
+                      </View>
                       <Text variant="muted">
                         {draftWorkoutType || 'Add a workout type above first'}
                       </Text>
@@ -767,7 +767,7 @@ export default function Index() {
                         accessibilityHint="Opens exercise history"
                         accessibilityLabel={`${record.exercise} history`}
                         accessibilityRole="button"
-                        className="flex-1"
+                        className="min-w-0 flex-1"
                         hitSlop={8}
                         onPress={() =>
                           router.push({
@@ -775,10 +775,15 @@ export default function Index() {
                             params: { exercise: record.exercise },
                           })
                         }>
-                        <Text className="font-semibold">{record.exercise}</Text>
-                        <Text className="text-muted-foreground mt-1 text-xs">
-                          {displayDate(record.performedOn)}
+                        <Text className="font-semibold" numberOfLines={1}>
+                          {record.exercise}
                         </Text>
+                        <View className="mt-1 flex-row items-center gap-2">
+                          <Text className="text-muted-foreground text-xs">
+                            {displayDate(record.performedOn)}
+                          </Text>
+                          {newPrIds.has(record.id) && <NewPrBadge />}
+                        </View>
                       </Pressable>
                       <View className="flex-row gap-1">
                         <Button

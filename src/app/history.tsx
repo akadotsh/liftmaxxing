@@ -1,8 +1,10 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { NewPrBadge } from '@/components/new-pr-badge';
 import { Text } from '@/components/ui/text';
 import { displayDate } from '@/lib/date';
+import { getNewPrIds } from '@/lib/pr';
 import {
   initializeDatabase,
   loadAppData,
@@ -59,6 +61,7 @@ export default function History() {
     () => [ALL_WORKOUTS, ...new Set(records.map(({ workoutType }) => workoutType))],
     [records]
   );
+  const newPrIds = useMemo(() => getNewPrIds(records), [records]);
   const filteredRecords = useMemo(() => {
     const query = search.trim().toLowerCase();
 
@@ -155,10 +158,15 @@ export default function History() {
               <Card className="gap-3 p-4">
                 <View className="flex-row items-start justify-between gap-3">
                   <View className="flex-1 gap-1">
-                    <Text className="font-semibold">{item.exercise}</Text>
-                    <Text className="text-muted-foreground text-xs">
-                      {displayDate(item.performedOn)}
+                    <Text className="font-semibold" numberOfLines={1}>
+                      {item.exercise}
                     </Text>
+                    <View className="flex-row items-center gap-2">
+                      <Text className="text-muted-foreground text-xs">
+                        {displayDate(item.performedOn)}
+                      </Text>
+                      {newPrIds.has(item.id) && <NewPrBadge />}
+                    </View>
                   </View>
                   {selectedType === ALL_WORKOUTS && (
                     <Text variant="muted">{item.workoutType}</Text>

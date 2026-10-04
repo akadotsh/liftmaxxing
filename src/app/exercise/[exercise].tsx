@@ -1,7 +1,9 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { NewPrBadge } from '@/components/new-pr-badge';
 import { Text } from '@/components/ui/text';
 import { displayDate } from '@/lib/date';
+import { getNewPrIds } from '@/lib/pr';
 import {
   initializeDatabase,
   loadExerciseHistory,
@@ -14,7 +16,7 @@ import { displayWeight } from '@/lib/weight';
 import { SymbolView } from 'expo-symbols';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useColorScheme } from 'nativewind';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -27,6 +29,7 @@ export default function ExerciseHistory() {
   const [weightUnit, setWeightUnit] = useState<WeightUnit>('kg');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
+  const newPrIds = useMemo(() => getNewPrIds(records), [records]);
 
   useEffect(() => {
     let isMounted = true;
@@ -97,7 +100,10 @@ export default function ExerciseHistory() {
           records.map((record) => (
             <Card key={record.id} className="gap-3 p-4">
               <View className="flex-row items-center justify-between gap-3">
-                <Text className="font-medium">{displayDate(record.performedOn)}</Text>
+                <View className="flex-row items-center gap-2">
+                  <Text className="font-medium">{displayDate(record.performedOn)}</Text>
+                  {newPrIds.has(record.id) && <NewPrBadge />}
+                </View>
                 <Text variant="muted">{record.workoutType}</Text>
               </View>
               <View className="flex-row items-baseline gap-2">
