@@ -699,18 +699,7 @@ export default function Index() {
                             params: { exercise: record.exercise },
                           })
                         }>
-                        <View className="flex-row items-center gap-1">
-                          <Text className="font-semibold">{record.exercise}</Text>
-                          <SymbolView
-                            name={{
-                              android: 'chevron_right',
-                              ios: 'chevron.right',
-                              web: 'chevron_right',
-                            }}
-                            size={14}
-                            tintColor={colors.mutedForeground}
-                          />
-                        </View>
+                        <Text className="font-semibold">{record.exercise}</Text>
                         <Text className="text-muted-foreground mt-1 text-xs">
                           {displayDate(record.performedOn)}
                         </Text>
