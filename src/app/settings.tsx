@@ -74,7 +74,7 @@ function SettingPicker<T extends string>({
         accessible
         accessibilityLabel={`${label}: ${selectedLabel}`}
         accessibilityRole="button"
-        className="w-full flex-row items-center justify-end gap-1 py-2"
+        className="w-full flex-row items-center justify-between py-2"
         style={{ opacity: disabled ? 0.5 : 1 }}>
         <Text className="text-muted-foreground text-sm font-medium">{selectedLabel}</Text>
         <SymbolView
