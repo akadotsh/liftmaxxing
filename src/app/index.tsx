@@ -24,7 +24,7 @@ import { DateTimePicker } from '@expo/ui/community/datetime-picker';
 import { SymbolView } from 'expo-symbols';
 import { router, useFocusEffect } from 'expo-router';
 import { useColorScheme } from 'nativewind';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Image, Platform, Pressable, ScrollView, View } from 'react-native';
 import Animated, {
   FadeIn,
@@ -139,6 +139,46 @@ export default function Index() {
   const [personalRecords, setPersonalRecords] = useState<PersonalRecord[]>([]);
   const [weightUnit, setWeightUnit] = useState<WeightUnit>('kg');
   const [storageError, setStorageError] = useState<string>();
+  const previousBest = useMemo(() => {
+    const exercise = draftPr.exercise.trim().toLowerCase();
+
+    return personalRecords.reduce<PersonalRecord | undefined>((best, record) => {
+      if (
+        !exercise ||
+        record.id === editingPrId ||
+        record.exercise.trim().toLowerCase() !== exercise ||
+        record.performedOn > draftPr.performedOn
+      ) {
+        return best;
+      }
+
+      if (
+        !best ||
+        record.weight > best.weight ||
+        (record.weight === best.weight && record.reps > best.reps)
+      ) {
+        return record;
+      }
+
+      return best;
+    }, undefined);
+  }, [draftPr.exercise, draftPr.performedOn, editingPrId, personalRecords]);
+  const currentWeight = Number(draftPr.weight);
+  const currentReps = Number(draftPr.reps);
+  const previousWeight = previousBest
+    ? displayWeight(previousBest.weight, weightUnit)
+    : undefined;
+  const comparison =
+    previousBest &&
+    previousWeight !== undefined &&
+    currentWeight > 0 &&
+    Number.isInteger(currentReps) &&
+    currentReps > 0
+      ? {
+          reps: currentReps - previousBest.reps,
+          weight: Number((currentWeight - previousWeight).toFixed(2)),
+        }
+      : undefined;
   const visibleRecords = personalRecords.filter(
     ({ workoutType }) => workoutType === selectedType
   );
@@ -620,6 +660,23 @@ export default function Index() {
                       />
                     </View>
                   </View>
+
+                  {previousBest && previousWeight !== undefined && (
+                    <View className="bg-muted gap-1 rounded-2xl px-4 py-3">
+                      <View className="flex-row items-center justify-between gap-3">
+                        <Text className="text-sm font-medium">Previous best</Text>
+                        <Text className="text-sm font-semibold">
+                          {previousWeight} {weightUnit} × {previousBest.reps}
+                        </Text>
+                      </View>
+                      {comparison && (
+                        <Text variant="muted">
+                          Weight {comparison.weight > 0 ? '+' : ''}{comparison.weight} {weightUnit}
+                          {' · '}Reps {comparison.reps > 0 ? '+' : ''}{comparison.reps}
+                        </Text>
+                      )}
+                    </View>
+                  )}
 
                   <View className="gap-1.5">
                     <Text className="text-sm font-medium">Date</Text>
