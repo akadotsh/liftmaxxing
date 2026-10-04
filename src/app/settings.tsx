@@ -27,8 +27,8 @@ const THEME_OPTIONS: { label: string; value: ThemeMode }[] = [
 ];
 
 const UNIT_OPTIONS: { label: string; value: WeightUnit }[] = [
-  { label: 'Kilograms', value: 'kg' },
-  { label: 'Pounds', value: 'lb' },
+  { label: 'kg', value: 'kg' },
+  { label: 'lbs', value: 'lb' },
 ];
 
 function SettingPicker<T extends string>({
