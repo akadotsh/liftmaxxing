@@ -749,7 +749,7 @@ export default function Index() {
                   <Image
                     className="h-10 w-10"
                     resizeMode="contain"
-                    source={require('../../assets/images/expo-logo.png')}
+                    source={require('../../assets/images/liftmaxxing-mark.png')}
                   />
                 </View>
                 <View className="items-center gap-1.5">
