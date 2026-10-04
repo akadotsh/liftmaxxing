@@ -450,6 +450,17 @@ export default function Index() {
                   <Text>Change split</Text>
                 </Button>
                 <Button
+                  accessibilityLabel="Open PR history"
+                  size="icon"
+                  variant="ghost"
+                  onPress={() => router.push('/history')}>
+                  <SymbolView
+                    name={{ android: 'history', ios: 'clock.arrow.circlepath', web: 'history' }}
+                    size={20}
+                    tintColor={colors.mutedForeground}
+                  />
+                </Button>
+                <Button
                   accessibilityLabel="Open settings"
                   size="icon"
                   variant="ghost"
