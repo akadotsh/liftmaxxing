@@ -11,17 +11,20 @@ import {
   insertPersonalRecord,
   insertWorkoutType,
   loadAppData,
+  loadPreferences,
   type PersonalRecord,
+  type WeightUnit,
   saveSelectedWorkoutType,
   saveWorkoutSetup,
   updatePersonalRecord,
 } from '@/lib/storage';
 import { cn } from '@/lib/utils';
+import { displayWeight, weightInKilograms } from '@/lib/weight';
 import { DateTimePicker } from '@expo/ui/community/datetime-picker';
 import { SymbolView } from 'expo-symbols';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useColorScheme } from 'nativewind';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Image, Platform, Pressable, ScrollView, View } from 'react-native';
 import Animated, {
   FadeIn,
@@ -134,6 +137,7 @@ export default function Index() {
   const [draftPr, setDraftPr] = useState(createDraftPr);
   const [draftWorkoutType, setDraftWorkoutType] = useState('');
   const [personalRecords, setPersonalRecords] = useState<PersonalRecord[]>([]);
+  const [weightUnit, setWeightUnit] = useState<WeightUnit>('kg');
   const [storageError, setStorageError] = useState<string>();
   const visibleRecords = personalRecords.filter(
     ({ workoutType }) => workoutType === selectedType
@@ -161,6 +165,7 @@ export default function Index() {
         setWorkoutTypes(data.workoutTypes);
         setSelectedType(data.selectedType);
         setPersonalRecords(data.personalRecords);
+        setWeightUnit(data.preferences.weightUnit);
         setIsConfigured(Boolean(data.configuredRoutine));
       } catch {
         if (isMounted) setStorageError('Could not load your saved data.');
@@ -174,6 +179,27 @@ export default function Index() {
       isMounted = false;
     };
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+
+      const refreshPreferences = async () => {
+        try {
+          await initializeDatabase();
+          const preferences = await loadPreferences();
+          if (isActive) setWeightUnit(preferences.weightUnit);
+        } catch {
+          if (isActive) setStorageError('Could not load your preferences.');
+        }
+      };
+
+      void refreshPreferences();
+      return () => {
+        isActive = false;
+      };
+    }, [])
+  );
 
   const selectRoutine = (routine: Routine) => {
     setSelectedRoutine(routine.name);
@@ -272,7 +298,7 @@ export default function Index() {
       exercise: record.exercise,
       performedOn: record.performedOn,
       reps: String(record.reps),
-      weight: String(record.weight),
+      weight: String(displayWeight(record.weight, weightUnit)),
     });
     setDraftWorkoutType(record.workoutType);
     setEditingPrId(record.id);
@@ -290,7 +316,7 @@ export default function Index() {
         exercise,
         performedOn: draftPr.performedOn,
         reps: Number(draftPr.reps),
-        weight: Number(draftPr.weight),
+        weight: weightInKilograms(Number(draftPr.weight), weightUnit),
         workoutType: draftWorkoutType,
       };
 
@@ -412,16 +438,29 @@ export default function Index() {
                 <Text variant="muted">Track every personal record.</Text>
                 {storageError && <Text className="text-destructive text-sm">{storageError}</Text>}
               </View>
-              <Button
-                size="sm"
-                variant="ghost"
-                onPress={() => {
-                  closePrForm();
-                  setIsChangingRoutine(true);
-                  setIsConfigured(false);
-                }}>
-                <Text>Change split</Text>
-              </Button>
+              <View className="flex-row items-center">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onPress={() => {
+                    closePrForm();
+                    setIsChangingRoutine(true);
+                    setIsConfigured(false);
+                  }}>
+                  <Text>Change split</Text>
+                </Button>
+                <Button
+                  accessibilityLabel="Open settings"
+                  size="icon"
+                  variant="ghost"
+                  onPress={() => router.push('/settings')}>
+                  <SymbolView
+                    name={{ android: 'settings', ios: 'gearshape', web: 'settings' }}
+                    size={20}
+                    tintColor={colors.mutedForeground}
+                  />
+                </Button>
+              </View>
             </View>
 
             <View className="gap-3">
@@ -544,10 +583,10 @@ export default function Index() {
 
                   <View className="flex-row gap-3">
                     <View className="flex-1 gap-1.5">
-                      <Text className="text-sm font-medium">Weight (kg)</Text>
+                      <Text className="text-sm font-medium">Weight ({weightUnit})</Text>
                       <Input
                         keyboardType="decimal-pad"
-                        placeholder="100"
+                        placeholder={weightUnit === 'lb' ? '225' : '100'}
                         value={draftPr.weight}
                         onChangeText={(weight) => setDraftPr((pr) => ({ ...pr, weight }))}
                       />
@@ -704,7 +743,9 @@ export default function Index() {
                       </View>
                     </View>
                     <View className="flex-row items-baseline gap-2">
-                      <Text className="text-2xl font-bold">{record.weight} kg</Text>
+                      <Text className="text-2xl font-bold">
+                        {displayWeight(record.weight, weightUnit)} {weightUnit}
+                      </Text>
                       <Text variant="muted">{record.reps} reps</Text>
                     </View>
                   </Card>

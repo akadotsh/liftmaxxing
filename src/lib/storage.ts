@@ -10,7 +10,23 @@ export type PersonalRecord = {
   workoutType: string;
 };
 
+export type ThemeMode = 'system' | 'light' | 'dark';
+export type WeightUnit = 'kg' | 'lb';
+
+export type Preferences = {
+  themeMode: ThemeMode;
+  weightUnit: WeightUnit;
+};
+
 type SettingRow = { key: string; value: string };
+
+const parsePreferences = (settings: Record<string, string>): Preferences => ({
+  themeMode:
+    settings.themeMode === 'light' || settings.themeMode === 'dark'
+      ? settings.themeMode
+      : 'system',
+  weightUnit: settings.weightUnit === 'lb' ? 'lb' : 'kg',
+});
 
 const database = SQLite.openDatabaseAsync('liftmaxxing.db');
 
@@ -78,9 +94,27 @@ export async function loadAppData() {
   return {
     configuredRoutine: settings.configuredRoutine,
     personalRecords,
+    preferences: parsePreferences(settings),
     selectedType: settings.selectedType ?? '',
     workoutTypes: workoutTypeRows.map(({ name }) => name),
   };
+}
+
+export async function loadPreferences() {
+  const db = await database;
+  const rows = await db.getAllAsync<SettingRow>(
+    `SELECT key, value FROM settings WHERE key IN ('themeMode', 'weightUnit')`
+  );
+  return parsePreferences(Object.fromEntries(rows.map(({ key, value }) => [key, value])));
+}
+
+export async function savePreference(key: keyof Preferences, value: string) {
+  const db = await database;
+  await db.runAsync(
+    'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
+    key,
+    value
+  );
 }
 
 export async function loadExerciseHistory(exercise: string) {

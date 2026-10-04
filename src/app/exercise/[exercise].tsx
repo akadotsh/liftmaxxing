@@ -5,9 +5,12 @@ import { displayDate } from '@/lib/date';
 import {
   initializeDatabase,
   loadExerciseHistory,
+  loadPreferences,
   type PersonalRecord,
+  type WeightUnit,
 } from '@/lib/storage';
 import { THEME } from '@/lib/theme';
+import { displayWeight } from '@/lib/weight';
 import { SymbolView } from 'expo-symbols';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useColorScheme } from 'nativewind';
@@ -21,6 +24,7 @@ export default function ExerciseHistory() {
   const { colorScheme } = useColorScheme();
   const colors = THEME[colorScheme ?? 'light'];
   const [records, setRecords] = useState<PersonalRecord[]>([]);
+  const [weightUnit, setWeightUnit] = useState<WeightUnit>('kg');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
 
@@ -36,8 +40,14 @@ export default function ExerciseHistory() {
 
       try {
         await initializeDatabase();
-        const history = await loadExerciseHistory(exercise);
-        if (isMounted) setRecords(history);
+        const [history, preferences] = await Promise.all([
+          loadExerciseHistory(exercise),
+          loadPreferences(),
+        ]);
+        if (isMounted) {
+          setRecords(history);
+          setWeightUnit(preferences.weightUnit);
+        }
       } catch {
         if (isMounted) setError('Could not load exercise history.');
       } finally {
@@ -91,7 +101,9 @@ export default function ExerciseHistory() {
                 <Text variant="muted">{record.workoutType}</Text>
               </View>
               <View className="flex-row items-baseline gap-2">
-                <Text className="text-2xl font-bold">{record.weight} kg</Text>
+                <Text className="text-2xl font-bold">
+                  {displayWeight(record.weight, weightUnit)} {weightUnit}
+                </Text>
                 <Text variant="muted">{record.reps} reps</Text>
               </View>
             </Card>
