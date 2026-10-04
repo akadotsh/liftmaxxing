@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
+import { displayDate, formatDateKey, isValidDateKey, parseDateKey } from '@/lib/date';
 import { THEME } from '@/lib/theme';
 import {
   deletePersonalRecord,
@@ -18,6 +19,7 @@ import {
 import { cn } from '@/lib/utils';
 import { DateTimePicker } from '@expo/ui/community/datetime-picker';
 import { SymbolView } from 'expo-symbols';
+import { router } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Image, Platform, Pressable, ScrollView, View } from 'react-native';
@@ -47,28 +49,6 @@ const ROUTINES = [
 ] as const;
 
 type Routine = (typeof ROUTINES)[number];
-
-const formatDateKey = (date: Date) =>
-  [date.getFullYear(), date.getMonth() + 1, date.getDate()]
-    .map((part, index) => String(part).padStart(index === 0 ? 4 : 2, '0'))
-    .join('-');
-
-const parseDateKey = (date: string) => {
-  const [year, month, day] = date.split('-').map(Number);
-  return new Date(year, month - 1, day);
-};
-
-const displayDate = (date: string) =>
-  parseDateKey(date).toLocaleDateString(undefined, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-
-const isValidDateKey = (date: string) =>
-  /^\d{4}-\d{2}-\d{2}$/.test(date) &&
-  formatDateKey(parseDateKey(date)) === date &&
-  date <= formatDateKey(new Date());
 
 const createDraftPr = () => ({
   exercise: '',
@@ -668,12 +648,34 @@ export default function Index() {
                 {visibleRecords.map((record) => (
                   <Card key={record.id} className="gap-4 p-5">
                     <View className="flex-row items-start justify-between gap-3">
-                      <View className="flex-1">
-                        <Text className="font-semibold">{record.exercise}</Text>
+                      <Pressable
+                        accessibilityHint="Opens exercise history"
+                        accessibilityLabel={`${record.exercise} history`}
+                        accessibilityRole="button"
+                        className="flex-1"
+                        hitSlop={8}
+                        onPress={() =>
+                          router.push({
+                            pathname: '/exercise/[exercise]',
+                            params: { exercise: record.exercise },
+                          })
+                        }>
+                        <View className="flex-row items-center gap-1">
+                          <Text className="font-semibold">{record.exercise}</Text>
+                          <SymbolView
+                            name={{
+                              android: 'chevron_right',
+                              ios: 'chevron.right',
+                              web: 'chevron_right',
+                            }}
+                            size={14}
+                            tintColor={colors.mutedForeground}
+                          />
+                        </View>
                         <Text className="text-muted-foreground mt-1 text-xs">
                           {displayDate(record.performedOn)}
                         </Text>
-                      </View>
+                      </Pressable>
                       <View className="flex-row gap-1">
                         <Button
                           accessibilityLabel={`Edit ${record.exercise}`}

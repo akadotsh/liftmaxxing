@@ -83,6 +83,24 @@ export async function loadAppData() {
   };
 }
 
+export async function loadExerciseHistory(exercise: string) {
+  const db = await database;
+  return db.getAllAsync<PersonalRecord>(
+    `SELECT
+      id,
+      exercise,
+      weight_kg AS weight,
+      reps,
+      workout_type AS workoutType,
+      COALESCE(performed_on, date(created_at / 1000, 'unixepoch', 'localtime')) AS performedOn,
+      created_at AS createdAt
+    FROM personal_records
+    WHERE exercise = ? COLLATE NOCASE
+    ORDER BY performedOn DESC, created_at DESC, id DESC`,
+    exercise
+  );
+}
+
 export async function saveWorkoutSetup(
   configuredRoutine: string,
   workoutTypes: string[],
