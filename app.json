@@ -17,7 +17,7 @@
         "monochromeImage": "./assets/images/liftmaxxing-adaptive.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.x0xakash.liftmaxxing"
+      "package": "com.akadotsh.liftmaxxing"
     },
     "web": {
       "bundler": "metro",
