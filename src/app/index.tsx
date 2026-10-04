@@ -168,6 +168,7 @@ export default function Index() {
           weight: Number((currentWeight - previousWeight).toFixed(2)),
         }
       : undefined;
+  const matchesPreviousBest = comparison?.weight === 0 && comparison.reps === 0;
   const visibleRecords = personalRecords.filter(
     ({ workoutType }) => workoutType === selectedType
   );
@@ -670,10 +671,15 @@ export default function Index() {
                         </Text>
                       </View>
                       {comparison && (
-                        <Text variant="muted">
-                          Weight {comparison.weight > 0 ? '+' : ''}{comparison.weight} {weightUnit}
-                          {' · '}Reps {comparison.reps > 0 ? '+' : ''}{comparison.reps}
-                        </Text>
+                        matchesPreviousBest ? (
+                          <Text className="text-sm font-semibold">Matches best</Text>
+                        ) : (
+                          <Text variant="muted">
+                            Weight {comparison.weight > 0 ? '+' : ''}{comparison.weight}{' '}
+                            {weightUnit}
+                            {' · '}Reps {comparison.reps > 0 ? '+' : ''}{comparison.reps}
+                          </Text>
+                        )
                       )}
                     </View>
                   )}
