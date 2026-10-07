@@ -49,9 +49,13 @@ jobs:
       - name: Generate Android project
         run: pnpm exec expo prebuild --platform android
 
-      - name: Build release APK
+      - name: Build optimized ARM64 release APK
         working-directory: android
-        run: ./gradlew app:assembleRelease --no-daemon
+        run: >-
+          ./gradlew app:assembleRelease --no-daemon
+          -PreactNativeArchitectures=arm64-v8a
+          -Pandroid.enableMinifyInReleaseBuilds=true
+          -Pandroid.enableShrinkResourcesInReleaseBuilds=true
 
       - name: Prepare APK
         run: cp android/app/build/outputs/apk/release/app-release.apk liftmaxxing.apk
