@@ -34,15 +34,7 @@
           "imageWidth": 128
         }
       ],
-      "expo-sqlite",
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "minSdkVersion": 26
-          }
-        }
-      ]
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,
