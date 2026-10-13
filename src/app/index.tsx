@@ -172,6 +172,7 @@ export default function Index() {
   const visibleRecords = personalRecords.filter(
     ({ workoutType }) => workoutType === selectedType
   );
+  const recentRecords = visibleRecords.slice(0, 5);
   const canSavePr = Boolean(
     draftWorkoutType &&
     draftPr.exercise.trim() &&
@@ -281,19 +282,33 @@ export default function Index() {
     }
   };
 
-  const removeWorkoutType = async (name: string) => {
-    const remainingTypes = workoutTypes.filter((type) => type !== name);
-    const nextSelectedType = selectedType === name ? (remainingTypes[0] ?? '') : selectedType;
+  const removeWorkoutType = (name: string) => {
+    Alert.alert(
+      `Delete ${name}?`,
+      'This removes the workout from your dashboard. Existing PRs stay in History.',
+      [
+        { style: 'cancel', text: 'Cancel' },
+        {
+          style: 'destructive',
+          text: 'Delete',
+          onPress: async () => {
+            const remainingTypes = workoutTypes.filter((type) => type !== name);
+            const nextSelectedType =
+              selectedType === name ? (remainingTypes[0] ?? '') : selectedType;
 
-    try {
-      await deleteWorkoutType(name, nextSelectedType);
-      setWorkoutTypes(remainingTypes);
-      setSelectedType(nextSelectedType);
-      if (draftWorkoutType === name) setDraftWorkoutType(nextSelectedType);
-      setStorageError(undefined);
-    } catch {
-      setStorageError('Could not delete that workout type.');
-    }
+            try {
+              await deleteWorkoutType(name, nextSelectedType);
+              setWorkoutTypes(remainingTypes);
+              setSelectedType(nextSelectedType);
+              if (draftWorkoutType === name) setDraftWorkoutType(nextSelectedType);
+              setStorageError(undefined);
+            } catch {
+              setStorageError('Could not delete that workout type.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const chooseWorkoutType = async (workoutType: string) => {
@@ -558,7 +573,7 @@ export default function Index() {
                             accessibilityRole="button"
                             className="py-1.5 pr-2.5"
                             hitSlop={8}
-                            onPress={() => void removeWorkoutType(type)}>
+                            onPress={() => removeWorkoutType(type)}>
                             <Text
                               className={cn(
                                 'text-muted-foreground text-sm leading-4',
@@ -766,7 +781,7 @@ export default function Index() {
             ) : (
               <View className="gap-3">
                 <Text variant="large">Recent {selectedType} PRs</Text>
-                {visibleRecords.map((record) => (
+                {recentRecords.map((record) => (
                   <Card key={record.id} className="gap-4 p-5">
                     <View className="flex-row items-start justify-between gap-3">
                       <Pressable
