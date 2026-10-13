@@ -29,8 +29,9 @@ const parsePreferences = (settings: Record<string, string>): Preferences => ({
 });
 
 const database = SQLite.openDatabaseAsync('liftmaxxing.db');
+let databaseInitialization: Promise<void> | undefined;
 
-export async function initializeDatabase() {
+async function setupDatabase() {
   const db = await database;
 
   await db.execAsync(`
@@ -67,6 +68,17 @@ export async function initializeDatabase() {
       WHERE performed_on IS NULL;
     `);
   }
+}
+
+export function initializeDatabase() {
+  if (!databaseInitialization) {
+    databaseInitialization = setupDatabase().catch((error) => {
+      databaseInitialization = undefined;
+      throw error;
+    });
+  }
+
+  return databaseInitialization;
 }
 
 export async function loadAppData() {

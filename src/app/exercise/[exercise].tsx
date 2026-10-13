@@ -17,7 +17,7 @@ import { SymbolView } from 'expo-symbols';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { FlatList, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ExerciseHistory() {
@@ -86,18 +86,26 @@ export default function ExerciseHistory() {
         </View>
       </View>
 
-      <ScrollView
-        className="flex-1"
-        contentContainerClassName="gap-3 p-5"
-        showsVerticalScrollIndicator={false}>
-        {isLoading ? (
+      {isLoading ? (
+        <View className="p-5">
           <Text variant="muted">Loading history…</Text>
-        ) : error ? (
+        </View>
+      ) : error ? (
+        <View className="p-5">
           <Text className="text-destructive">{error}</Text>
-        ) : records.length === 0 ? (
+        </View>
+      ) : records.length === 0 ? (
+        <View className="p-5">
           <Text variant="muted">No history found for this exercise.</Text>
-        ) : (
-          records.map((record) => (
+        </View>
+      ) : (
+        <FlatList
+          data={records}
+          className="flex-1"
+          contentContainerClassName="gap-3 p-5"
+          keyExtractor={({ id }) => String(id)}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item: record }) => (
             <Card key={record.id} className="gap-3 p-4">
               <View className="flex-row items-center justify-between gap-3">
                 <View className="flex-row items-center gap-2">
@@ -113,9 +121,9 @@ export default function ExerciseHistory() {
                 <Text variant="muted">{record.reps} reps</Text>
               </View>
             </Card>
-          ))
-        )}
-      </ScrollView>
+          )}
+        />
+      )}
     </SafeAreaView>
   );
 }
