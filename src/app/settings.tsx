@@ -69,7 +69,11 @@ function SettingPicker<T extends string>({
       }))}
       colorScheme={colorScheme}
       style={{ width: 80 }}
-      onPressAction={({ nativeEvent }) => onChange(nativeEvent.event as T)}>
+      onPressAction={({ nativeEvent }) => {
+        const option = options.find(({ value }) => value === nativeEvent.event);
+
+        if (option) onChange(option.value);
+      }}>
       <View
         accessible
         accessibilityLabel={`${label}: ${selectedLabel}`}
@@ -115,6 +119,7 @@ export default function Settings() {
   const changeTheme = async (nextTheme: ThemeMode) => {
     setThemeMode(nextTheme);
     nativeWindColorScheme.set(nextTheme);
+
     try {
       await savePreference('themeMode', nextTheme);
       setError(undefined);

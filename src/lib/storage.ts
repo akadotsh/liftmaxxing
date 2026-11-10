@@ -11,6 +11,7 @@ export type PersonalRecord = {
 };
 
 export type ThemeMode = 'system' | 'light' | 'dark';
+
 export type WeightUnit = 'kg' | 'lb';
 
 export type Preferences = {
@@ -60,6 +61,7 @@ async function setupDatabase() {
   `);
 
   const columns = await db.getAllAsync<{ name: string }>('PRAGMA table_info(personal_records)');
+
   if (!columns.some(({ name }) => name === 'performed_on')) {
     await db.execAsync(`
       ALTER TABLE personal_records ADD COLUMN performed_on TEXT;
@@ -83,6 +85,7 @@ export function initializeDatabase() {
 
 export async function loadAppData() {
   const db = await database;
+
   const [settingRows, workoutTypeRows, personalRecords] = await Promise.all([
     db.getAllAsync<SettingRow>('SELECT key, value FROM settings'),
     db.getAllAsync<{ name: string }>(
@@ -101,6 +104,7 @@ export async function loadAppData() {
       ORDER BY performedOn DESC, created_at DESC, id DESC
     `),
   ]);
+
   const settings = Object.fromEntries(settingRows.map(({ key, value }) => [key, value]));
 
   return {
@@ -114,9 +118,11 @@ export async function loadAppData() {
 
 export async function loadPreferences() {
   const db = await database;
+
   const rows = await db.getAllAsync<SettingRow>(
     `SELECT key, value FROM settings WHERE key IN ('themeMode', 'weightUnit')`
   );
+
   return parsePreferences(Object.fromEntries(rows.map(({ key, value }) => [key, value])));
 }
 
@@ -131,6 +137,7 @@ export async function savePreference(key: keyof Preferences, value: string) {
 
 export async function loadExerciseHistory(exercise: string) {
   const db = await database;
+
   return db.getAllAsync<PersonalRecord>(
     `SELECT
       id,
@@ -222,6 +229,7 @@ export async function insertPersonalRecord(
 ): Promise<PersonalRecord> {
   const db = await database;
   const createdAt = Date.now();
+
   const result = await db.runAsync(
     `INSERT INTO personal_records
       (exercise, weight_kg, reps, workout_type, performed_on, created_at)

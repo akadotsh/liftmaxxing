@@ -40,6 +40,7 @@ export function findPreviousBest(
 export function getNewPrIds(records: PrRecord[]) {
   const bestByExercise = new Map<string, PrRecord>();
   const newPrIds = new Set<number>();
+
   const oldestFirst = [...records].sort(
     (a, b) =>
       a.performedOn.localeCompare(b.performedOn) ||

@@ -141,6 +141,7 @@ export default function Index() {
   const [personalRecords, setPersonalRecords] = useState<PersonalRecord[]>([]);
   const [weightUnit, setWeightUnit] = useState<WeightUnit>('kg');
   const [storageError, setStorageError] = useState<string>();
+
   const previousBest = useMemo(
     () =>
       findPreviousBest(
@@ -151,12 +152,15 @@ export default function Index() {
       ),
     [draftPr.exercise, draftPr.performedOn, editingPrId, personalRecords]
   );
+
   const newPrIds = useMemo(() => getNewPrIds(personalRecords), [personalRecords]);
   const currentWeight = Number(draftPr.weight);
   const currentReps = Number(draftPr.reps);
+
   const previousWeight = previousBest
     ? displayWeight(previousBest.weight, weightUnit)
     : undefined;
+
   const comparison =
     previousBest &&
     previousWeight !== undefined &&
@@ -168,11 +172,15 @@ export default function Index() {
           weight: Number((currentWeight - previousWeight).toFixed(2)),
         }
       : undefined;
+
   const matchesPreviousBest = comparison?.weight === 0 && comparison.reps === 0;
+
   const visibleRecords = personalRecords.filter(
     ({ workoutType }) => workoutType === selectedType
   );
+
   const recentRecords = visibleRecords.slice(0, 5);
+
   const canSavePr = Boolean(
     draftWorkoutType &&
     draftPr.exercise.trim() &&
@@ -181,6 +189,7 @@ export default function Index() {
     Number.isInteger(Number(draftPr.reps)) &&
     Number(draftPr.reps) > 0
   );
+
   const isDraftNewPr =
     canSavePr &&
     beatsPersonalRecord(
@@ -197,6 +206,7 @@ export default function Index() {
       try {
         await initializeDatabase();
         const data = await loadAppData();
+
         if (!isMounted) return;
 
         setConfiguredRoutine(data.configuredRoutine);
@@ -214,6 +224,7 @@ export default function Index() {
     };
 
     void load();
+
     return () => {
       isMounted = false;
     };
@@ -227,6 +238,7 @@ export default function Index() {
         try {
           await initializeDatabase();
           const preferences = await loadPreferences();
+
           if (isActive) setWeightUnit(preferences.weightUnit);
         } catch {
           if (isActive) setStorageError('Could not load your preferences.');
@@ -234,6 +246,7 @@ export default function Index() {
       };
 
       void refreshPreferences();
+
       return () => {
         isActive = false;
       };
@@ -246,6 +259,7 @@ export default function Index() {
 
   const confirmRoutine = async () => {
     const routine = ROUTINES.find(({ name }) => name === selectedRoutine);
+
     if (!routine) return;
 
     const types = [...routine.types];
@@ -293,6 +307,7 @@ export default function Index() {
           text: 'Delete',
           onPress: async () => {
             const remainingTypes = workoutTypes.filter((type) => type !== name);
+
             const nextSelectedType =
               selectedType === name ? (remainingTypes[0] ?? '') : selectedType;
 
@@ -300,6 +315,7 @@ export default function Index() {
               await deleteWorkoutType(name, nextSelectedType);
               setWorkoutTypes(remainingTypes);
               setSelectedType(nextSelectedType);
+
               if (draftWorkoutType === name) setDraftWorkoutType(nextSelectedType);
               setStorageError(undefined);
             } catch {
@@ -316,6 +332,7 @@ export default function Index() {
     setNewType('');
 
     const chipOffset = chipOffsets.current.get(workoutType);
+
     if (chipOffset !== undefined) {
       chipScrollRef.current?.scrollTo({ animated: true, x: Math.max(0, chipOffset - 16) });
     }
@@ -323,6 +340,7 @@ export default function Index() {
     try {
       await saveSelectedWorkoutType(workoutType);
       setSelectedType(workoutType);
+
       if (isLoggingPr) setDraftWorkoutType(workoutType);
       setStorageError(undefined);
     } catch {
@@ -361,9 +379,11 @@ export default function Index() {
 
   const savePr = async () => {
     const exercise = draftPr.exercise.trim();
+
     if (!canSavePr || isSavingPr) return;
 
     setIsSavingPr(true);
+
     try {
       const values = {
         exercise,
@@ -375,6 +395,7 @@ export default function Index() {
 
       if (editingPrId) {
         const currentRecord = personalRecords.find(({ id }) => id === editingPrId);
+
         if (!currentRecord) return;
 
         const updatedRecord = { ...currentRecord, ...values };

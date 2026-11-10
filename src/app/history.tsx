@@ -40,6 +40,7 @@ export default function History() {
       try {
         await initializeDatabase();
         const data = await loadAppData();
+
         if (isMounted) {
           setRecords(data.personalRecords);
           setWeightUnit(data.preferences.weightUnit);
@@ -52,6 +53,7 @@ export default function History() {
     };
 
     void load();
+
     return () => {
       isMounted = false;
     };
@@ -61,7 +63,9 @@ export default function History() {
     () => [ALL_WORKOUTS, ...new Set(records.map(({ workoutType }) => workoutType))],
     [records]
   );
+
   const newPrIds = useMemo(() => getNewPrIds(records), [records]);
+
   const filteredRecords = useMemo(() => {
     const query = search.trim().toLowerCase();
 

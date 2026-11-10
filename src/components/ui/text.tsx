@@ -51,7 +51,9 @@ const ROLE: Partial<Record<TextVariant, Role>> = {
   h2: 'heading',
   h3: 'heading',
   h4: 'heading',
+  // SAFETY: React Native's Role union omits this web host role, which preserves blockquote semantics.
   blockquote: Platform.select({ web: 'blockquote' as Role }),
+  // SAFETY: React Native's Role union omits this web host role, which preserves inline code semantics.
   code: Platform.select({ web: 'code' as Role }),
 };
 
@@ -76,6 +78,7 @@ function Text({
   }) {
   const textClass = React.useContext(TextClassContext);
   const Component = asChild ? Slot : RNText;
+
   return (
     <Component
       className={cn(textVariants({ variant }), textClass, className)}

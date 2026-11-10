@@ -38,15 +38,18 @@ export default function ExerciseHistory() {
       if (!exercise) {
         setError('Exercise not found.');
         setIsLoading(false);
+
         return;
       }
 
       try {
         await initializeDatabase();
+
         const [history, preferences] = await Promise.all([
           loadExerciseHistory(exercise),
           loadPreferences(),
         ]);
+
         if (isMounted) {
           setRecords(history);
           setWeightUnit(preferences.weightUnit);
@@ -59,6 +62,7 @@ export default function ExerciseHistory() {
     };
 
     void load();
+
     return () => {
       isMounted = false;
     };

@@ -19,8 +19,11 @@ const ids = getNewPrIds([
 ]);
 
 assert.deepEqual([...ids], [1, 2, 4]);
+
 assert.equal(beatsPersonalRecord({ weight: 100, reps: 5 }, { weight: 100, reps: 5 }), false);
+
 assert.equal(beatsPersonalRecord({ weight: 100, reps: 6 }, { weight: 100, reps: 5 }), true);
+
 assert.equal(beatsPersonalRecord({ weight: 101, reps: 1 }, { weight: 100, reps: 10 }), true);
 
 const records = [
@@ -30,5 +33,7 @@ const records = [
 ];
 
 assert.equal(findPreviousBest(records, ' bench PRESS ', '2026-04-02')?.id, 1);
+
 assert.equal(findPreviousBest(records, 'Bench press', '2026-04-04')?.id, 2);
+
 assert.equal(findPreviousBest(records, 'Bench press', '2026-04-04', 2)?.id, 1);
